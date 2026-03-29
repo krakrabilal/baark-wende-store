@@ -1,10 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  listenProducts, listenOrders, listenReviews,
-  addProduct, updateProduct, deleteProduct,
-  addOrder, updateOrderStatus, deleteReview,
-  uploadPhoto
-} from "./firebase";
+import { listenProducts, listenOrders, addOrder, addProduct, updateProduct, deleteProduct, updateOrderStatus } from "./firebase";
 
 /* ═══════════════════════════════════════════
    COMPTES
@@ -14,6 +9,7 @@ const ACCOUNTS = [
   { id:"Admin1",     pw:"Bonjour123.", name:"Admin 1", role:"admin" },
   { id:"Admin2",     pw:"Bonsoir1234.",name:"Admin 2", role:"admin" },
 ];
+
 
 /* ═══════════════════════════════════════════
    DONNÉES
@@ -55,43 +51,44 @@ const LOGO="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox
 const CSS=`
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root{
-  --g:#8B5CF6;--gd:#6D28D9;--gl:rgba(139,92,246,.14);--pk:#EC4899;--pkd:#BE185D;
-  --bk:#0D0A14;--dk:#130E1E;--cd:#1C1528;--c2:#251D35;
-  --br:#2D2040;--tx:#F3F0FF;--mt:#9B8EC0;
+  --g:#7C3AED;--gd:#5B21B6;--gl:rgba(124,58,237,.12);--pk:#EC4899;--pkd:#BE185D;
+  --bk:#FFFFFF;--dk:#F8F7FF;--cd:#F1EFFE;--c2:#EDE9FE;
+  --br:#DDD6FE;--tx:#1E1333;--mt:#6B7280;
   --gn:#10B981;--rd:#EF4444;--or:#F59E0B;--bl:#3B82F6;
-  --r:12px;--sh:0 8px 32px rgba(0,0,0,.6);
+  --r:12px;--sh:0 4px 24px rgba(124,58,237,.12);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{font-size:16px}
-body{font-family:'DM Sans',sans-serif;background:var(--bk);color:var(--tx);overflow-x:hidden;-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:#fff;color:var(--tx);overflow-x:hidden;-webkit-text-size-adjust:100%}
 img{max-width:100%;display:block}
 button{cursor:pointer}
 ::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--dk)}
+::-webkit-scrollbar-track{background:#f1f1f1}
 ::-webkit-scrollbar-thumb{background:var(--gd);border-radius:2px}
 
 /* NAV */
-.nb{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,10,10,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:60px;gap:8px}
+.nb{position:fixed;top:0;left:0;right:0;z-index:900;background:linear-gradient(135deg,#6D28D9,#7C3AED);backdrop-filter:blur(20px);border-bottom:none;box-shadow:0 2px 20px rgba(109,40,217,.3);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:66px;gap:8px}
 .br{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;flex-shrink:0}
-.bl{width:34px;height:34px;background:linear-gradient(135deg,var(--g),var(--pk));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
-.bn{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;line-height:1.1}
-.bs{font-size:8px;color:var(--g);text-transform:uppercase;letter-spacing:2px}
+.bl{width:44px;height:44px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;padding:4px}
+.bn{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;line-height:1.1;color:#fff}
+.bs{font-size:8px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:2px}
 .nls{display:flex;gap:2px}
 @media(max-width:520px){.nls{display:none}}
-.nl{background:none;border:none;color:var(--mt);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 12px;border-radius:7px;transition:.2s}
-.nl:hover,.nl.on{color:var(--g);background:var(--gl)}
+@media(min-width:769px){.bl{width:52px;height:52px;padding:5px}}
+.nl{background:none;border:none;color:rgba(255,255,255,.8);font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 12px;border-radius:7px;transition:.2s}
+.nl:hover,.nl.on{color:#fff;background:rgba(255,255,255,.15)}
 .nr{display:flex;align-items:center;gap:6px}
-.nb-btn{background:none;border:1px solid var(--br);color:var(--tx);border-radius:7px;padding:6px 11px;font-family:'DM Sans',sans-serif;font-size:12px;transition:.2s;position:relative;white-space:nowrap}
-.nb-btn:hover{border-color:var(--g);color:var(--g)}
+.nb-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:6px 11px;font-family:'DM Sans',sans-serif;font-size:12px;transition:.2s;position:relative;white-space:nowrap}
+.nb-btn:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.6);color:#fff}
 .cbg{position:absolute;top:-5px;right:-5px;background:var(--rd);color:#fff;width:16px;height:16px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
 
 /* HERO */
-.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 16px 50px;background:radial-gradient(ellipse at 20% 50%,rgba(139,92,246,.18),transparent 55%),radial-gradient(ellipse at 80% 20%,rgba(236,72,153,.12),transparent 50%),radial-gradient(ellipse at 60% 90%,rgba(109,40,217,.1),transparent 50%),var(--dk);position:relative;overflow:hidden}
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 16px 50px;background:radial-gradient(ellipse at 20% 50%,rgba(124,58,237,.08),transparent 55%),radial-gradient(ellipse at 80% 20%,rgba(236,72,153,.06),transparent 50%),#fff;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%238B5CF6' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
 .hi{position:relative;z-index:1;width:100%;max-width:640px}
-.htag{display:inline-flex;align-items:center;gap:7px;background:rgba(139,92,246,.13);border:1px solid rgba(139,92,246,.3);color:var(--g);padding:5px 14px;border-radius:100px;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(34px,9vw,80px);font-weight:900;line-height:1.05;margin-bottom:14px;background:linear-gradient(135deg,#fff 30%,var(--g) 70%,var(--pk) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{font-size:clamp(13px,3vw,15px);color:var(--mt);max-width:480px;margin:0 auto 28px;line-height:1.8}
+.htag{display:inline-flex;align-items:center;gap:7px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--g);padding:5px 14px;border-radius:100px;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(34px,9vw,80px);font-weight:900;line-height:1.05;margin-bottom:14px;background:linear-gradient(135deg,#1E1333 20%,var(--g) 60%,var(--pk) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(13px,3vw,15px);color:#4B5563;max-width:480px;margin:0 auto 28px;line-height:1.8}
 .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .bg{background:linear-gradient(135deg,var(--g),var(--pk));color:#fff;border:none;padding:11px 24px;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;transition:.3s}
 .bg:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(139,92,246,.5)}
@@ -104,32 +101,32 @@ button{cursor:pointer}
 /* SECTIONS */
 .sec{padding:clamp(40px,8vw,70px) 16px;max-width:1260px;margin:0 auto}
 .sh{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:10px}
-.st{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,32px);font-weight:700}
+.st{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,32px);font-weight:700;color:var(--tx)}
 .st span{color:var(--g)}
 .ss{font-size:12px;color:var(--mt);margin-top:4px}
 .sa{background:none;border:1px solid var(--br);color:var(--mt);padding:6px 14px;border-radius:7px;font-size:11px;font-family:'DM Sans',sans-serif;transition:.2s}
 .sa:hover{border-color:var(--g);color:var(--g)}
-.div{height:1px;background:var(--br);margin:0 16px}
+.div{height:1px;background:#E5E7EB;margin:0 16px}
 
 /* SEARCH / CATS */
 .sw{position:relative;margin-bottom:18px}
 .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mt);font-size:14px}
-.sinp{width:100%;background:var(--cd);border:1px solid var(--br);color:var(--tx);padding:11px 14px 11px 42px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:.2s}
+.sinp{width:100%;background:#fff;border:1px solid #D1D5DB;color:var(--tx);padding:11px 14px 11px 42px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .sinp:focus{border-color:var(--g)}
 .cts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.cb{background:var(--cd);border:1px solid var(--br);color:var(--mt);padding:7px 14px;border-radius:100px;font-size:11px;font-family:'DM Sans',sans-serif;transition:.2s}
+.cb{background:#fff;border:1px solid #D1D5DB;color:#6B7280;padding:7px 14px;border-radius:100px;font-size:11px;font-family:'DM Sans',sans-serif;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .cb:hover,.cb.on{background:var(--g);border-color:var(--g);color:var(--bk);font-weight:600}
 
 /* PRODUCT GRID */
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:clamp(10px,2vw,16px)}
-.pc{background:var(--cd);border:1px solid var(--br);border-radius:var(--r);overflow:hidden;transition:.3s;position:relative}
-.pc:hover{border-color:var(--g);transform:translateY(-3px);box-shadow:var(--sh)}
-.pi{height:clamp(130px,25vw,170px);display:flex;align-items:center;justify-content:center;font-size:clamp(50px,12vw,66px);background:var(--c2);position:relative;overflow:hidden}
+.pc{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);overflow:hidden;transition:.3s;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.pc:hover{border-color:var(--g);transform:translateY(-3px);box-shadow:0 8px 24px rgba(124,58,237,.15)}
+.pi{height:clamp(130px,25vw,170px);display:flex;align-items:center;justify-content:center;font-size:clamp(50px,12vw,66px);background:#F5F3FF;position:relative;overflow:hidden}
 .pi img{width:100%;height:100%;object-fit:cover}
 .pb2{position:absolute;top:8px;left:8px;background:linear-gradient(135deg,var(--g),var(--pk));color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:100px}
 .pb{padding:11px}
 .pc2{font-size:9px;color:var(--g);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.pn{font-family:'Playfair Display',serif;font-size:clamp(12px,2.5vw,13px);font-weight:700;margin-bottom:6px;line-height:1.3}
+.pn{font-family:'Playfair Display',serif;font-size:clamp(12px,2.5vw,13px);font-weight:700;margin-bottom:6px;line-height:1.3;color:var(--tx)}
 .ps{color:var(--g);font-size:10px;margin-bottom:7px}
 .pp{font-size:clamp(12px,2.5vw,14px);font-weight:700;color:var(--g);margin-bottom:10px}
 .po{font-size:10px;color:var(--mt);text-decoration:line-through;margin-left:5px;font-weight:400}
@@ -141,17 +138,17 @@ button{cursor:pointer}
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:2000;display:flex;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(5px)}
 @media(min-width:600px){.ov{align-items:center;padding:14px}}
-.md{background:var(--dk);border:1px solid var(--br);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0}
+.md{background:#fff;border:1px solid #E5E7EB;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;box-shadow:0 20px 60px rgba(0,0,0,.15)}
 @media(min-width:600px){.md{border-radius:16px;max-height:88vh}}
-.mh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--br);position:sticky;top:0;background:var(--dk);z-index:1}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #E5E7EB;position:sticky;top:0;background:#fff;z-index:1}
 .mt2{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
 .mc{background:var(--cd);border:none;color:var(--mt);padding:5px 10px;border-radius:7px;font-size:12px;font-family:'DM Sans',sans-serif}
 .mb{padding:18px}
-.mib{height:200px;background:var(--c2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:80px;margin-bottom:14px;overflow:hidden}
+.mib{height:200px;background:#F5F3FF;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:80px;margin-bottom:14px;overflow:hidden}
 .mib img{width:100%;height:100%;object-fit:cover}
 
 /* GALERIE */
-.gm{position:relative;height:clamp(180px,45vw,220px);border-radius:10px;overflow:hidden;background:var(--c2);margin-bottom:8px}
+.gm{position:relative;height:clamp(180px,45vw,220px);border-radius:10px;overflow:hidden;background:#F5F3FF;margin-bottom:8px}
 .gm img{width:100%;height:100%;object-fit:cover}
 .ga{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.65);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s}
 .ga:hover{background:var(--g);color:var(--bk)}
@@ -164,11 +161,11 @@ button{cursor:pointer}
 .gthi img{width:100%;height:100%;object-fit:cover}
 
 /* ORDER OPTIONS */
-.oo{background:var(--c2);border-radius:10px;padding:13px;margin-top:4px}
+.oo{background:#F5F3FF;border-radius:10px;padding:13px;margin-top:4px;border:1px solid #DDD6FE}
 .ob{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border-radius:8px;padding:12px 13px;margin-bottom:8px;font-family:'DM Sans',sans-serif;transition:.2s}
 .ob:last-child{margin-bottom:0}
 .ob.gld{background:linear-gradient(135deg,var(--g),var(--pk));border:none;color:#fff}
-.ob.lne{background:var(--cd);border:1px solid var(--br);color:var(--tx)}
+.ob.lne{background:#fff;border:1px solid #D1D5DB;color:var(--tx)}
 .ob.lne:hover{border-color:var(--g)}
 .ot{font-weight:700;font-size:13px;display:block;margin-bottom:1px}
 .os{font-size:10px;opacity:.7;display:block}
@@ -176,20 +173,20 @@ button{cursor:pointer}
 /* FORM */
 .fg2{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
 .fl{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.7px}
-.fi{background:var(--cd);border:1px solid var(--br);color:var(--tx);padding:10px 12px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;transition:.2s}
+.fi{background:#fff;border:1px solid #D1D5DB;color:var(--tx);padding:10px 12px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;transition:.2s}
 .fi:focus{border-color:var(--g)}
-select.fi option{background:var(--dk)}
+select.fi option{background:#fff;color:var(--tx)}
 textarea.fi{resize:vertical;min-height:64px}
 
 /* CART PANEL */
-.cp{position:fixed;right:0;top:0;bottom:0;width:min(360px,100vw);background:var(--dk);border-left:1px solid var(--br);z-index:1500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.cp{position:fixed;right:0;top:0;bottom:0;width:min(360px,100vw);background:#fff;border-left:1px solid #E5E7EB;z-index:1500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1)}
 .cp.on{transform:none}
 .cb2{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1400}
 .cb2.on{display:block}
-.ch{padding:14px 18px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center}
+.ch{padding:14px 18px;border-bottom:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center}
 .cl{flex:1;overflow-y:auto;padding:12px 18px}
-.ci{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--br)}
-.cii{width:46px;height:46px;background:var(--c2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden}
+.ci{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #F3F4F6}
+.cii{width:46px;height:46px;background:#F5F3FF;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden}
 .cii img{width:100%;height:100%;object-fit:cover}
 .cn{font-size:11px;font-weight:600;margin-bottom:2px}
 .cp2{font-size:11px;color:var(--g);font-weight:700}
@@ -197,20 +194,20 @@ textarea.fi{resize:vertical;min-height:64px}
 .cd2{background:none;border:none;color:var(--mt);font-size:14px;padding:3px}
 .cd2:hover{color:var(--rd)}
 .ce{text-align:center;padding:44px 0;color:var(--mt)}
-.cf{padding:14px 18px;border-top:1px solid var(--br)}
+.cf{padding:14px 18px;border-top:1px solid #E5E7EB}
 .cr{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
 .ctlbl{font-size:11px;color:var(--mt)}
 .ctval{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--g)}
 
 /* REVIEWS */
 .rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:13px}
-.rc{background:var(--cd);border:1px solid var(--br);border-radius:var(--r);padding:16px}
+.rc{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 .rt{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ra{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--pk));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
 .rn{font-weight:600;font-size:13px}
 .rd{font-size:10px;color:var(--mt)}
 .rs{color:var(--g);font-size:11px;margin-bottom:6px}
-.rx{font-size:12px;color:var(--mt);line-height:1.7}
+.rx{font-size:12px;color:#4B5563;line-height:1.7}
 
 /* TOAST */
 .tst{position:fixed;bottom:72px;right:16px;background:var(--cd);border:1px solid var(--g);border-radius:10px;background:var(--cd);padding:11px 15px;display:flex;align-items:center;gap:8px;z-index:4000;box-shadow:var(--sh);transform:translateY(10px);opacity:0;transition:.3s;max-width:min(280px,90vw);font-size:12px;pointer-events:none}
@@ -222,7 +219,7 @@ textarea.fi{resize:vertical;min-height:64px}
 .wa:hover{transform:scale(1.1)}
 
 /* FOOTER */
-footer{background:var(--dk);border-top:1px solid var(--br);padding:clamp(28px,6vw,44px) 16px 20px}
+footer{background:#F8F7FF;border-top:1px solid #E5E7EB;padding:clamp(28px,6vw,44px) 16px 20px}
 .fg3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:clamp(20px,4vw,36px);max-width:1260px;margin:0 auto 32px}
 .fbr{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;margin-bottom:8px}
 .fd{font-size:11px;color:var(--mt);line-height:1.9;margin-bottom:12px}
@@ -235,7 +232,7 @@ footer{background:var(--dk);border-top:1px solid var(--br);padding:clamp(28px,6v
 
 /* LOGIN */
 .lw{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(139,92,246,.15),var(--bk) 70%);padding:16px}
-.lc{background:var(--dk);border:1px solid var(--br);border-radius:16px;padding:clamp(24px,5vw,36px) clamp(18px,5vw,28px);width:100%;max-width:400px}
+.lc{background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:clamp(24px,5vw,36px) clamp(18px,5vw,28px);width:100%;max-width:400px;box-shadow:0 8px 32px rgba(124,58,237,.1)}
 .le{background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);border-radius:7px;padding:9px 12px;font-size:12px;color:var(--rd);margin-bottom:12px}
 
 /* ADMIN LAYOUT */
@@ -248,19 +245,19 @@ footer{background:var(--dk);border-top:1px solid var(--br);padding:clamp(28px,6v
 .ubg.sup{background:rgba(139,92,246,.2);color:var(--g)}
 .ubg.adm{background:rgba(52,152,219,.2);color:var(--bl)}
 .sbn{padding:8px 8px;flex:1}
-.an{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;color:var(--mt);font-size:12px;transition:.2s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.an:hover,.an.on{background:var(--gl);color:var(--g)}
-.an.dg:hover{background:rgba(231,76,60,.12);color:var(--rd)}
-.am{margin-left:220px;flex:1;background:var(--bk);transition:.3s;min-width:0}
+.an{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;color:rgba(255,255,255,.7);font-size:12px;transition:.2s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.an:hover,.an.on{background:rgba(255,255,255,.15);color:#fff}
+.an.dg:hover{background:rgba(239,68,68,.2);color:#fca5a5}
+.am{margin-left:220px;flex:1;background:#F9FAFB;transition:.3s;min-width:0}
 .am.full{margin-left:0}
-.at{background:var(--dk);border-bottom:1px solid var(--br);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:400;flex-wrap:wrap;gap:8px}
+.at{background:#fff;border-bottom:1px solid #E5E7EB;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:400;flex-wrap:wrap;gap:8px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .ac{padding:clamp(14px,3vw,22px)}
 .atl{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,24px);font-weight:700;margin-bottom:3px}
 .asl{font-size:11px;color:var(--mt);margin-bottom:18px}
 
 /* STAT CARDS */
 .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,42vw),1fr));gap:10px;margin-bottom:20px}
-.sc{background:var(--cd);border:1px solid var(--br);border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
+.sc{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);padding:16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 .sc::before{content:'';position:absolute;top:-16px;right:-16px;width:60px;height:60px;background:linear-gradient(135deg,var(--g),var(--pk));opacity:.07;border-radius:50%}
 .si2{font-size:22px;margin-bottom:8px}
 .slbl{font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
@@ -268,13 +265,13 @@ footer{background:var(--dk);border-top:1px solid var(--br);padding:clamp(28px,6v
 .str{font-size:10px;color:var(--gn)}
 
 /* TABLE */
-.tw{background:var(--cd);border:1px solid var(--br);border-radius:var(--r);overflow:hidden;overflow-x:auto;margin-bottom:18px;-webkit-overflow-scrolling:touch;max-width:100%}
+.tw{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);overflow:hidden;overflow-x:auto;margin-bottom:18px;-webkit-overflow-scrolling:touch;max-width:100%;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .tb2{padding:11px 14px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:7px}
 table{width:100%;border-collapse:collapse;min-width:460px}
-th{background:var(--c2);padding:9px 12px;font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.6px;text-align:left;white-space:nowrap}
-td{padding:11px 12px;font-size:12px;border-bottom:1px solid var(--br)}
+th{background:#F5F3FF;padding:9px 12px;font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:.6px;text-align:left;white-space:nowrap}
+td{padding:11px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;color:var(--tx)}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(139,92,246,.04)}
+tr:hover td{background:#F5F3FF}
 .sbg{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:100px;font-size:10px;font-weight:600;white-space:nowrap}
 .s-l{background:rgba(46,204,113,.15);color:var(--gn)}
 .s-c{background:rgba(52,152,219,.15);color:var(--bl)}
@@ -294,7 +291,7 @@ tr:hover td{background:rgba(139,92,246,.04)}
 
 /* PHOTO UPLOAD */
 .phs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.ph{aspect-ratio:1;border:2px dashed var(--br);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;background:var(--c2);transition:.2s}
+.ph{aspect-ratio:1;border:2px dashed #DDD6FE;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#F5F3FF;transition:.2s}
 .ph:hover{border-color:var(--pk)}
 .ph.on{border-style:solid;border-color:var(--g)}
 .ph img{width:100%;height:100%;object-fit:cover}
@@ -330,9 +327,9 @@ tr:hover td{background:rgba(139,92,246,.04)}
 /* MOBILE MENU CLIENT */
 .mob-nav{display:none}
 @media(max-width:768px){
-  .mob-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--dk);border-top:1px solid var(--br);z-index:800;height:56px;padding:0 4px}
-  .mn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;color:var(--mt);font-family:'DM Sans',sans-serif;font-size:9px;transition:.2s;padding:6px 2px;border-radius:8px}
-  .mn-btn.on{color:var(--g);background:var(--gl)}
+  .mob-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E5E7EB;z-index:800;height:56px;padding:0 4px;box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+  .mn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;color:#9CA3AF;font-family:'DM Sans',sans-serif;font-size:9px;transition:.2s;padding:6px 2px;border-radius:8px}
+  .mn-btn.on{color:var(--g);background:#F5F3FF}
   .mn-btn span:first-child{font-size:20px}
   .hero{padding-bottom:76px}
   .sec{padding-bottom:82px}
@@ -340,7 +337,7 @@ tr:hover td{background:rgba(139,92,246,.04)}
 }
 
 /* ADMIN RESPONSIVE */
-.sb{position:fixed;top:0;left:0;bottom:0;width:220px;transition:.35s cubic-bezier(.4,0,.2,1);z-index:500}
+.sb{position:fixed;top:0;left:0;bottom:0;width:220px;transition:.35s cubic-bezier(.4,0,.2,1);z-index:500;background:linear-gradient(180deg,#6D28D9,#7C3AED)}
 .sb.hide{width:0;overflow:hidden}
 .sb-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:499}
 .sb-back.on{display:block}
@@ -563,12 +560,16 @@ function ClientApp({products,orders,setOrders,onAdmin}){
     else timer.current=setTimeout(()=>{clicks.current=0;setPage("home");},400);
   };
 
-  const addCart=p=>{
+  const addCart=(p,qty=1)=>{
     setCart(prev=>{
       const ex=prev.find(i=>i.id===p.id);
-      return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,qty:1}];
+      return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+qty}:i):[...prev,{...p,qty}];
     });
     show(p.name+" ajouté au panier !");
+  };
+
+  const updateQty=(id,delta)=>{
+    setCart(prev=>prev.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+delta)}:i));
   };
 
   const cnt=cart.reduce((s,i)=>s+i.qty,0);
@@ -603,8 +604,8 @@ function ClientApp({products,orders,setOrders,onAdmin}){
         <button className="mn-btn" onClick={()=>window.open("https://wa.me/2250787213203","_blank")}><span>💬</span>WhatsApp</button>
       </div>
 
-      <ProdModal prod={sel} onClose={()=>setSel(null)} orders={orders} setOrders={setOrders} showT={show}/>
-      <CartPanel open={cartOpen} onClose={()=>setCO(false)} items={cart} onRemove={id=>setCart(p=>p.filter(i=>i.id!==id))} orders={orders} setOrders={setOrders} showT={show}/>
+      <ProdModal prod={sel} onClose={()=>setSel(null)} onAddCart={addCart} showT={show}/>
+      <CartPanel open={cartOpen} onClose={()=>setCO(false)} items={cart} onRemove={id=>setCart(p=>p.filter(i=>i.id!==id))} onUpdateQty={updateQty} orders={orders} setOrders={setOrders} showT={show}/>
       <button className="wa" onClick={()=>window.open("https://wa.me/2250787213203?text=Bonjour Baark Wendé Store!","_blank")}>💬</button>
       <Toast t={t}/>
     </>
@@ -694,6 +695,13 @@ function ShopView({products,onView,onAdd}){
 
 function PCard({p,onView,onAdd}){
   const cover=p.photos?.[0];
+  const[added,setAdded]=useState(false);
+  const handleAdd=(e)=>{
+    e.stopPropagation();
+    onAdd(p,1);
+    setAdded(true);
+    setTimeout(()=>setAdded(false),1500);
+  };
   return(
     <div className="pc" onClick={()=>onView(p)}>
       <div className="pi">
@@ -706,7 +714,9 @@ function PCard({p,onView,onAdd}){
         <div className="ps">{star(p.r)} <span style={{color:"var(--mt)",fontSize:9}}>({p.rv})</span></div>
         <div className="pp">{fmt(p.price)}{p.old&&<span className="po">{fmt(p.old)}</span>}</div>
         <div className="pf">
-          <button className="ba" onClick={e=>{e.stopPropagation();onView(p);}}>Commander</button>
+          <button className="ba" style={{background:added?"#16A34A":undefined,transition:".3s"}} onClick={handleAdd}>
+            {added?"✅ Ajouté !":"🛒 Ajouter"}
+          </button>
           <button className="be" onClick={e=>{e.stopPropagation();onView(p);}}>👁</button>
         </div>
       </div>
@@ -714,85 +724,122 @@ function PCard({p,onView,onAdd}){
   );
 }
 
-function ProdModal({prod,onClose,orders,setOrders,showT}){
+/* ── IMAGE LIGHTBOX ── */
+function Lightbox({photos,startIdx,onClose}){
+  const[idx,setIdx]=useState(startIdx||0);
+  useEffect(()=>{
+    const h=e=>{if(e.key==="Escape")onClose();if(e.key==="ArrowRight")setIdx(i=>(i+1)%photos.length);if(e.key==="ArrowLeft")setIdx(i=>(i-1+photos.length)%photos.length);};
+    window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h);
+  },[photos.length,onClose]);
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.93)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12}}>
+      <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,.15)",border:"none",color:"#fff",width:40,height:40,borderRadius:"50%",fontSize:20,cursor:"pointer"}}>✕</button>
+      <div style={{position:"relative",maxWidth:"92vw",maxHeight:"80vh",display:"flex",alignItems:"center"}}>
+        <img src={photos[idx]} alt="" onClick={e=>e.stopPropagation()} style={{maxWidth:"92vw",maxHeight:"78vh",objectFit:"contain",borderRadius:10,boxShadow:"0 0 60px rgba(0,0,0,.8)"}} onError={e=>{e.target.style.display="none";}}/>
+        {photos.length>1&&<>
+          <button onClick={e=>{e.stopPropagation();setIdx(i=>(i-1+photos.length)%photos.length);}} style={{position:"absolute",left:-44,background:"rgba(255,255,255,.15)",border:"none",color:"#fff",width:36,height:36,borderRadius:"50%",fontSize:20,cursor:"pointer"}}>‹</button>
+          <button onClick={e=>{e.stopPropagation();setIdx(i=>(i+1)%photos.length);}} style={{position:"absolute",right:-44,background:"rgba(255,255,255,.15)",border:"none",color:"#fff",width:36,height:36,borderRadius:"50%",fontSize:20,cursor:"pointer"}}>›</button>
+        </>}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        {photos.map((_,i)=><div key={i} onClick={e=>{e.stopPropagation();setIdx(i);}} style={{width:i===idx?32:8,height:8,borderRadius:4,background:i===idx?"#fff":"rgba(255,255,255,.35)",cursor:"pointer",transition:".2s"}}/>)}
+      </div>
+      <div style={{color:"rgba(255,255,255,.5)",fontSize:12}}>{idx+1} / {photos.length} — Appuyez sur Échap pour fermer</div>
+    </div>
+  );
+}
+
+/* ── AUTO-SLIDE GALLERY ── */
+function Gallery({photos,fallback}){
   const[idx,setIdx]=useState(0);
-  const[mode,setMode]=useState(null);
-  const[phone,setPhone]=useState("");
-  const[addr,setAddr]=useState("");
+  const[lightbox,setLightbox]=useState(false);
+  const timerRef=useRef(null);
+
+  // Auto-défilement toutes les 3 secondes
+  useEffect(()=>{
+    if(photos.length<=1)return;
+    timerRef.current=setInterval(()=>setIdx(i=>(i+1)%photos.length),3000);
+    return()=>clearInterval(timerRef.current);
+  },[photos.length]);
+
+  const goTo=(i)=>{
+    clearInterval(timerRef.current);
+    setIdx(i);
+    // Reprend auto-slide après 5s
+    timerRef.current=setInterval(()=>setIdx(j=>(j+1)%photos.length),3000);
+  };
+
+  if(photos.length===0) return <div className="mib">{fallback}</div>;
+
+  return(
+    <>
+      {lightbox&&<Lightbox photos={photos} startIdx={idx} onClose={()=>setLightbox(false)}/>}
+      <div className="gm" style={{cursor:"zoom-in"}} onClick={()=>setLightbox(true)} title="Cliquer pour agrandir">
+        <img src={photos[idx]} alt="" onError={e=>{e.target.style.display="none";}}/>
+        <div style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,.45)",borderRadius:6,padding:"3px 7px",fontSize:10,color:"#fff",display:"flex",alignItems:"center",gap:4}}>🔍 Agrandir</div>
+        {photos.length>1&&<>
+          <button className="ga" style={{left:8}} onClick={e=>{e.stopPropagation();goTo((idx-1+photos.length)%photos.length);}}>‹</button>
+          <button className="ga" style={{right:8}} onClick={e=>{e.stopPropagation();goTo((idx+1)%photos.length);}}>›</button>
+          <div className="gd2">{photos.map((_,i)=><div key={i} className={`gdt${i===idx?" on":""}`} onClick={e=>{e.stopPropagation();goTo(i);}}/>)}</div>
+        </>}
+      </div>
+      {photos.length>1&&(
+        <div className="gth">
+          {photos.map((ph,i)=>(
+            <div key={i} className={`gthi${i===idx?" on":""}`} onClick={()=>goTo(i)}>
+              <img src={ph} alt="" onError={e=>{e.target.style.display="none";}}/>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function ProdModal({prod,onClose,onAddCart,showT}){
   const[done,setDone]=useState(false);
-  useEffect(()=>{setIdx(0);setMode(null);setPhone("");setAddr("");setDone(false);},[prod?.id]);
+  const[qty,setQty]=useState(1);
+  useEffect(()=>{setDone(false);setQty(1);},[prod?.id]);
   if(!prod)return null;
   const photos=(prod.photos||[]).filter(Boolean);
-  const waMsg=encodeURIComponent(`Bonjour Baark Wendé Store 👋\nJe souhaite commander :\n📦 *${prod.name}*\n💰 ${fmt(prod.price)}\nMerci.`);
-  const submit=()=>{
-    if(!phone.trim()||!addr.trim()){showT("Remplissez tous les champs !",true);return;}
-    const newOrd={id:nid(),client:"Client",phone,product:prod.name,amount:prod.price,status:"En attente",date:new Date().toLocaleDateString("fr-FR"),lieu:addr};
-    setOrders(prev=>[newOrd,...prev]);
-    addOrder(newOrd).catch(()=>{});
+  const handleAddCart=()=>{
+    onAddCart(prod,qty);
     setDone(true);
+    setTimeout(()=>{onClose();setDone(false);},1400);
   };
+
   return(
     <div className="ov" onClick={onClose}>
       <div className="md" onClick={e=>e.stopPropagation()}>
         <div className="mh">
-          <span className="mt2">{mode==="form"?"📋 Commander":"Détail produit"}</span>
-          <button className="mc" onClick={mode?()=>setMode(null):onClose}>{mode?"← Retour":"✕ Fermer"}</button>
+          <span className="mt2">Détail produit</span>
+          <button className="mc" onClick={onClose}>✕ Fermer</button>
         </div>
         <div className="mb">
-          {!mode&&!done&&(
-            <>
-              {photos.length>0?(
-                <>
-                  <div className="gm">
-                    <img src={photos[idx]} alt="" onError={e=>{e.target.style.display="none";}}/>
-                    {photos.length>1&&(
-                      <>
-                        <button className="ga" style={{left:8}} onClick={()=>setIdx(i=>(i-1+photos.length)%photos.length)}>‹</button>
-                        <button className="ga" style={{right:8}} onClick={()=>setIdx(i=>(i+1)%photos.length)}>›</button>
-                        <div className="gd2">{photos.map((_,i)=><div key={i} className={`gdt${i===idx?" on":""}`} onClick={()=>setIdx(i)}/>)}</div>
-                      </>
-                    )}
-                  </div>
-                  {photos.length>1&&<div className="gth">{photos.map((ph,i)=><div key={i} className={`gthi${i===idx?" on":""}`} onClick={()=>setIdx(i)}><img src={ph} alt="" onError={e=>{e.target.style.display="none";}}/></div>)}</div>}
-                </>
-              ):<div className="mib">{prod.img}</div>}
-              <div style={{fontSize:9,color:"var(--g)",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:5}}>{prod.cat}</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,marginBottom:6}}>{prod.name}</div>
-              <div className="rs" style={{marginBottom:8}}>{star(prod.r)} <span style={{color:"var(--mt)",fontSize:10}}>({prod.rv} avis)</span></div>
-              <p style={{fontSize:12,color:"var(--mt)",lineHeight:1.8,marginBottom:12}}>{prod.desc}</p>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:700,color:"var(--g)",marginBottom:6}}>{fmt(prod.price)}</div>
-              <div style={{fontSize:11,color:"var(--mt)",marginBottom:16}}>Stock : <strong style={{color:"var(--gn)"}}>{prod.stock} unités</strong></div>
-              <div className="oo">
-                <div style={{fontSize:12,fontWeight:700,color:"var(--g)",marginBottom:10}}>📦 Comment commander ?</div>
-                <button className="ob gld" onClick={()=>setMode("form")}><span style={{fontSize:18}}>📋</span><span><span className="ot">Remplir le formulaire</span><span className="os">Numéro + lieu de livraison</span></span></button>
-                <button className="ob lne" onClick={()=>window.open(`https://wa.me/2250787213203?text=${waMsg}`,"_blank")}><span style={{fontSize:18}}>💬</span><span><span className="ot">Commander via WhatsApp</span><span className="os">Écrire directement à la boutique</span></span></button>
-              </div>
-            </>
-          )}
-          {mode==="form"&&!done&&(
-            <>
-              <div style={{background:"rgba(201,168,76,.08)",border:"1px solid rgba(201,168,76,.3)",borderRadius:8,padding:12,marginBottom:16}}>
-                <div style={{fontWeight:700,color:"var(--g)",fontSize:13,marginBottom:3}}>{prod.name}</div>
-                <div style={{color:"var(--mt)",fontSize:12}}>Prix : <strong style={{color:"var(--tx)"}}>{fmt(prod.price)}</strong></div>
-              </div>
-              <div className="fg2"><label className="fl">Numéro de téléphone *</label><input className="fi" placeholder="07 12 34 56 78" value={phone} onChange={e=>setPhone(e.target.value)}/></div>
-              <div className="fg2"><label className="fl">Lieu de livraison *</label><input className="fi" placeholder="Quartier, commune — Côte d'Ivoire" value={addr} onChange={e=>setAddr(e.target.value)}/></div>
-              <div style={{fontSize:11,color:"var(--mt)",background:"var(--c2)",borderRadius:7,padding:"9px 12px",marginBottom:14,lineHeight:1.7}}>ℹ️ La boutique vous contactera pour confirmer.</div>
-              <div style={{display:"flex",gap:8}}>
-                <button className="bo" onClick={()=>setMode(null)}>← Retour</button>
-                <button className="bg" style={{flex:1,padding:11}} onClick={submit}>✅ Envoyer</button>
-              </div>
-            </>
-          )}
-          {done&&(
-            <div className="succ">
-              <div style={{fontSize:52,marginBottom:13}}>🎉</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:19,fontWeight:700,marginBottom:8}}>Commande envoyée !</div>
-              <p style={{color:"var(--mt)",fontSize:12,lineHeight:1.85,marginBottom:20}}>
-                <strong style={{color:"var(--g)"}}>Baark Wendé Store</strong> vous contactera au <strong style={{color:"var(--tx)"}}>{phone}</strong> pour livraison à <strong style={{color:"var(--tx)"}}>{addr}</strong>.
-              </p>
-              <button className="bg" style={{padding:"10px 26px"}} onClick={onClose}>Fermer</button>
-            </div>
+          <Gallery photos={photos} fallback={prod.img}/>
+          <div style={{fontSize:9,color:"var(--g)",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:5}}>{prod.cat}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,marginBottom:6,color:"var(--tx)"}}>{prod.name}</div>
+          <div className="rs" style={{marginBottom:8}}>{star(prod.r)} <span style={{color:"var(--mt)",fontSize:10}}>({prod.rv} avis)</span></div>
+          <p style={{fontSize:12,color:"var(--mt)",lineHeight:1.8,marginBottom:12}}>{prod.desc}</p>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:700,color:"var(--g)",marginBottom:4}}>{fmt(prod.price)}</div>
+          {prod.old&&<div style={{fontSize:11,color:"var(--mt)",textDecoration:"line-through",marginBottom:6}}>{fmt(prod.old)}</div>}
+          <div style={{fontSize:11,color:"var(--mt)",marginBottom:16}}>Stock : <strong style={{color:"var(--gn)"}}>{prod.stock} unités</strong></div>
+
+          {/* Quantité */}
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,background:"#F5F3FF",borderRadius:10,padding:"10px 14px"}}>
+            <span style={{fontSize:12,color:"var(--mt)",fontWeight:600}}>Quantité :</span>
+            <button onClick={()=>setQty(q=>Math.max(1,q-1))} style={{width:30,height:30,borderRadius:8,border:"1px solid var(--br)",background:"#fff",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}>−</button>
+            <span style={{fontWeight:700,fontSize:15,minWidth:24,textAlign:"center",color:"var(--tx)"}}>{qty}</span>
+            <button onClick={()=>setQty(q=>Math.min(prod.stock,q+1))} style={{width:30,height:30,borderRadius:8,border:"1px solid var(--br)",background:"#fff",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}>+</button>
+            <span style={{marginLeft:"auto",fontWeight:700,color:"var(--g)",fontSize:14}}>{fmt(prod.price*qty)}</span>
+          </div>
+
+          {!done?(
+            <button className="bg" style={{width:"100%",padding:14,fontSize:14}} onClick={handleAddCart}>
+              🛒 Ajouter au panier
+            </button>
+          ):(
+            <div style={{textAlign:"center",padding:"13px",background:"#F0FDF4",borderRadius:10,color:"#16A34A",fontWeight:700,fontSize:14}}>✅ Ajouté au panier !</div>
           )}
         </div>
       </div>
@@ -800,17 +847,19 @@ function ProdModal({prod,onClose,orders,setOrders,showT}){
   );
 }
 
-function CartPanel({open,onClose,items,onRemove,orders,setOrders,showT}){
+function CartPanel({open,onClose,items,onRemove,onUpdateQty,orders,setOrders,showT}){
   const[step,setStep]=useState(0);
   const[phone,setPhone]=useState("");
   const[addr,setAddr]=useState("");
   const[done,setDone]=useState(false);
   const total=items.reduce((s,i)=>s+i.price*i.qty,0);
   useEffect(()=>{if(!open){setStep(0);setDone(false);setPhone("");setAddr("");}},[ open]);
-  const waMsg=encodeURIComponent(`Bonjour Baark Wendé Store 👋\n${items.map(i=>`📦 ${i.name} x${i.qty}`).join("\n")}\n💰 Total : ${fmt(total)}\nMerci.`);
+  const waMsg=encodeURIComponent(`Bonjour Baark Wendé Store 👋\n${items.map(i=>`📦 ${i.name} x${i.qty} — ${fmt(i.price*i.qty)}`).join("\n")}\n💰 Total : ${fmt(total)}\nMerci.`);
   const submit=()=>{
     if(!phone.trim()||!addr.trim()){showT("Remplissez tous les champs !",true);return;}
-    setOrders(prev=>[{id:nid(),client:"Client",phone,product:items.map(i=>i.name).join(", "),amount:total,status:"En attente",date:new Date().toLocaleDateString("fr-FR"),lieu:addr},...prev]);
+    const newOrd={id:nid(),client:"Client",phone,product:items.map(i=>i.name).join(", "),amount:total,status:"En attente",date:new Date().toLocaleDateString("fr-FR"),lieu:addr};
+    setOrders(prev=>[newOrd,...prev]);
+    addOrder(newOrd).catch(()=>{});
     setDone(true);
   };
   return(
@@ -818,50 +867,107 @@ function CartPanel({open,onClose,items,onRemove,orders,setOrders,showT}){
       <div className={`cb2${open?" on":""}`} onClick={onClose}/>
       <div className={`cp${open?" on":""}`}>
         <div className="ch">
-          <div><div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700}}>🛒 Mon Panier</div><div style={{fontSize:10,color:"var(--mt)"}}>{items.length} article(s)</div></div>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"var(--tx)"}}>🛒 Mon Panier</div>
+            <div style={{fontSize:10,color:"var(--mt)"}}>{items.reduce((s,i)=>s+i.qty,0)} article(s)</div>
+          </div>
           <button className="mc" onClick={onClose}>✕</button>
         </div>
-        {!step&&!done&&(
+
+        {/* ÉTAPE 0 — Liste panier */}
+        {step===0&&!done&&(
           <>
             <div className="cl">
-              {items.length===0?<div className="ce"><div style={{fontSize:38,marginBottom:10}}>🛒</div><div>Panier vide</div></div>
-              :items.map(item=>(
+              {items.length===0?(
+                <div className="ce"><div style={{fontSize:38,marginBottom:10}}>🛒</div><div style={{color:"var(--mt)"}}>Votre panier est vide</div></div>
+              ):items.map(item=>(
                 <div key={item.id} className="ci">
                   <div className="cii">{item.photos?.[0]?<img src={item.photos[0]} alt="" onError={e=>{e.target.style.display="none";}}/>:item.img}</div>
-                  <div style={{flex:1}}><div className="cn">{item.name}</div><div className="cp2">{fmt(item.price)}</div><div className="cq">Qté : {item.qty}</div></div>
+                  <div style={{flex:1}}>
+                    <div className="cn" style={{color:"var(--tx)"}}>{item.name}</div>
+                    <div className="cp2">{fmt(item.price)}</div>
+                    {/* Quantité dans panier */}
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}>
+                      <button onClick={()=>onUpdateQty(item.id,-1)} style={{width:22,height:22,borderRadius:5,border:"1px solid var(--br)",background:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}>−</button>
+                      <span style={{fontSize:12,fontWeight:700,color:"var(--tx)",minWidth:16,textAlign:"center"}}>{item.qty}</span>
+                      <button onClick={()=>onUpdateQty(item.id,1)} style={{width:22,height:22,borderRadius:5,border:"1px solid var(--br)",background:"#fff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--g)"}}>+</button>
+                      <span style={{fontSize:11,color:"var(--mt)",marginLeft:4}}>{fmt(item.price*item.qty)}</span>
+                    </div>
+                  </div>
                   <button className="cd2" onClick={()=>onRemove(item.id)}>🗑</button>
                 </div>
               ))}
             </div>
             {items.length>0&&(
               <div className="cf">
-                <div className="cr"><span className="ctlbl">Total</span><span className="ctval">{fmt(total)}</span></div>
-                <button className="bg" style={{width:"100%",padding:11,marginBottom:7}} onClick={()=>setStep(1)}>📋 Commander (formulaire)</button>
-                <button className="bo" style={{width:"100%",padding:10}} onClick={()=>window.open(`https://wa.me/2250787213203?text=${waMsg}`,"_blank")}>💬 Commander via WhatsApp</button>
+                <div className="cr"><span className="ctlbl" style={{color:"var(--mt)"}}>Total</span><span className="ctval">{fmt(total)}</span></div>
+                <button className="bg" style={{width:"100%",padding:12,marginBottom:8,fontSize:13}} onClick={()=>setStep(1)}>
+                  📋 Valider — Remplir formulaire
+                </button>
+                <button className="bo" style={{width:"100%",padding:10,fontSize:13}} onClick={()=>window.open(`https://wa.me/2250787213203?text=${waMsg}`,"_blank")}>
+                  💬 Commander via WhatsApp
+                </button>
               </div>
             )}
           </>
         )}
+
+        {/* ÉTAPE 1 — Formulaire commande */}
         {step===1&&!done&&(
           <div style={{padding:16,flex:1,overflowY:"auto"}}>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,marginBottom:13}}>📋 Finaliser</div>
-            <div style={{background:"rgba(201,168,76,.07)",borderRadius:8,padding:11,marginBottom:14,fontSize:11,color:"var(--mt)"}}>
-              {items.map(i=><div key={i.id}>{i.name} x{i.qty} — {fmt(i.price*i.qty)}</div>)}
-              <div style={{marginTop:7,fontWeight:700,color:"var(--g)",fontSize:13}}>Total : {fmt(total)}</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,marginBottom:13,color:"var(--tx)"}}>📋 Infos de livraison</div>
+            <div style={{background:"#F5F3FF",border:"1px solid var(--br)",borderRadius:9,padding:12,marginBottom:14}}>
+              {items.map(i=>(
+                <div key={i.id} style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--mt)",marginBottom:4}}>
+                  <span>{i.name} <strong style={{color:"var(--g)"}}>×{i.qty}</strong></span>
+                  <span style={{fontWeight:600}}>{fmt(i.price*i.qty)}</span>
+                </div>
+              ))}
+              <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid var(--br)",fontWeight:700,color:"var(--g)",fontSize:13,display:"flex",justifyContent:"space-between"}}>
+                <span>Total</span><span>{fmt(total)}</span>
+              </div>
             </div>
-            <div className="fg2"><label className="fl">Téléphone *</label><input className="fi" placeholder="07 XX XX XX XX" value={phone} onChange={e=>setPhone(e.target.value)}/></div>
-            <div className="fg2"><label className="fl">Lieu de livraison *</label><input className="fi" placeholder="Quartier, commune" value={addr} onChange={e=>setAddr(e.target.value)}/></div>
-            <div style={{display:"flex",gap:7,marginTop:10}}>
-              <button className="bo" style={{flex:1}} onClick={()=>setStep(0)}>← Retour</button>
-              <button className="bg" style={{flex:2,padding:11}} onClick={submit}>✅ Confirmer</button>
+            <div className="fg2">
+              <label className="fl">Numéro de téléphone *</label>
+              <input className="fi" placeholder="07 XX XX XX XX" value={phone} onChange={e=>setPhone(e.target.value)}/>
+            </div>
+            <div className="fg2">
+              <label className="fl">Quantité par article</label>
+              <div style={{background:"#F9FAFB",borderRadius:8,padding:"9px 12px",border:"1px solid #E5E7EB"}}>
+                {items.map(i=>(
+                  <div key={i.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                    <span style={{fontSize:11,color:"var(--mt)"}}>{i.name}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <button onClick={()=>onUpdateQty(i.id,-1)} style={{width:22,height:22,borderRadius:5,border:"1px solid var(--br)",background:"#fff",fontSize:14,cursor:"pointer",color:"var(--g)"}}>−</button>
+                      <span style={{fontSize:12,fontWeight:700,color:"var(--tx)",minWidth:16,textAlign:"center"}}>{i.qty}</span>
+                      <button onClick={()=>onUpdateQty(i.id,1)} style={{width:22,height:22,borderRadius:5,border:"1px solid var(--br)",background:"#fff",fontSize:14,cursor:"pointer",color:"var(--g)"}}>+</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="fg2">
+              <label className="fl">Lieu de livraison *</label>
+              <input className="fi" placeholder="Quartier, commune — Côte d'Ivoire" value={addr} onChange={e=>setAddr(e.target.value)}/>
+            </div>
+            <div style={{fontSize:10,color:"var(--mt)",background:"#F9FAFB",borderRadius:7,padding:"8px 11px",marginBottom:12,lineHeight:1.7,border:"1px solid #E5E7EB"}}>
+              ℹ️ Nous vous contacterons pour confirmer et organiser la livraison.
+            </div>
+            <div style={{display:"flex",gap:7}}>
+              <button className="bo" style={{flex:1,padding:10}} onClick={()=>setStep(0)}>← Retour</button>
+              <button className="bg" style={{flex:2,padding:11}} onClick={submit}>✅ Confirmer la commande</button>
             </div>
           </div>
         )}
+
+        {/* SUCCÈS */}
         {done&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:22,textAlign:"center"}}>
-            <div style={{fontSize:48,marginBottom:12}}>🎉</div>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:700,marginBottom:8}}>Commande envoyée !</div>
-            <p style={{color:"var(--mt)",fontSize:12,lineHeight:1.8,marginBottom:18}}>Nous vous contacterons au <strong style={{color:"var(--tx)"}}>{phone}</strong> pour livraison à <strong style={{color:"var(--tx)"}}>{addr}</strong>.</p>
+            <div style={{fontSize:52,marginBottom:12}}>🎉</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:700,marginBottom:8,color:"var(--tx)"}}>Commande envoyée !</div>
+            <p style={{color:"var(--mt)",fontSize:12,lineHeight:1.8,marginBottom:18}}>
+              <strong style={{color:"var(--g)"}}>Baark Wendé Store</strong> vous contactera au <strong style={{color:"var(--tx)"}}>{phone}</strong> pour la livraison à <strong style={{color:"var(--tx)"}}>{addr}</strong>.
+            </p>
             <button className="bg" style={{padding:"9px 22px"}} onClick={onClose}>Fermer</button>
           </div>
         )}
@@ -871,148 +977,16 @@ function CartPanel({open,onClose,items,onRemove,orders,setOrders,showT}){
 }
 
 /* ═══════════════════════════════════════════
-   ADMIN
+   ADMIN — PRODUCTS
 ═══════════════════════════════════════════ */
-function AdminApp({user,onLogout,products,setProducts,orders,setOrders}){
-  const[tab,setTab]=useState("dashboard");
-  const[sbOpen,setSB]=useState(true);
-  const[mobSB,setMSB]=useState(false);
-  const[m3,setM3]=useState(false);
-  const[t,show]=useToast();
-  const isSuper=user.role==="superadmin";
-
-  const NAV=[
-    {id:"dashboard",icon:"📊",label:"Dashboard"},
-    {id:"products", icon:"📦",label:"Produits"},
-    {id:"orders",   icon:"🛒",label:"Commandes"},
-    {id:"stock",    icon:"📈",label:"Stock"},
-    {id:"stats",    icon:"📉",label:"Statistiques"},
-    {id:"reviews",  icon:"⭐",label:"Avis clients"},
-    ...(isSuper?[
-      {id:"admins",   icon:"👥",label:"Gestion Admins"},
-      {id:"settings", icon:"⚙️",label:"Paramètres"},
-      {id:"security", icon:"🔒",label:"Sécurité"},
-    ]:[]),
-  ];
-
-  return(
-    <div className="aw">
-      {/* Overlay mobile sidebar */}
-      <div className={`sb-back${mobSB?" on":""}`} onClick={()=>setMSB(false)}/>
-
-      {/* SIDEBAR */}
-      <div className={`sb${!sbOpen?" hide":""}${mobSB?" mob-on":""}`}>
-        <div className="sbl">
-          <div className="br" style={{cursor:"default"}}>
-            <div className="bl" style={{width:32,height:32,background:"none",padding:0,overflow:"hidden"}}><img src={LOGO} alt="logo" style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
-            <div><div className="bn" style={{fontSize:12}}>Admin</div><div className="bs">Baark Wendé</div></div>
-          </div>
-        </div>
-        <div className="sbu">
-          <div style={{fontWeight:600,fontSize:12,marginBottom:5}}>{user.name}</div>
-          <span className={`ubg ${user.role==="superadmin"?"sup":"adm"}`}>{user.role==="superadmin"?"👑 Super Admin":"🔧 Admin"}</span>
-        </div>
-        <div className="sbn">
-          {NAV.map(n=>(
-            <button key={n.id} className={`an${tab===n.id?" on":""}`} onClick={()=>{setTab(n.id);setMSB(false);}}>
-              <span>{n.icon}</span><span>{n.label}</span>
-            </button>
-          ))}
-          <div style={{marginTop:16,borderTop:"1px solid var(--br)",paddingTop:10}}>
-            <button className="an dg" onClick={onLogout}><span>🚪</span><span>Déconnexion</span></button>
-          </div>
-        </div>
-      </div>
-
-      {/* MAIN */}
-      <div className={`am${!sbOpen?" full":""}`}>
-        <div className="at">
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <button className="m3b" onClick={()=>{setSB(o=>!o);setMSB(o=>!o);}}>☰</button>
-            <div>
-              <div style={{fontWeight:600,fontSize:13}}>{NAV.find(n=>n.id===tab)?.icon} {NAV.find(n=>n.id===tab)?.label}</div>
-              <div style={{fontSize:10,color:"var(--mt)"}}>Baark Wendé Store</div>
-            </div>
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{fontSize:11,color:"var(--mt)",display:"none"}} className="d-md-block">Connecté : <strong style={{color:"var(--tx)"}}>{user.name}</strong></div>
-            <div className="m3w">
-              <button className="m3b" onClick={()=>setM3(o=>!o)}>⋯</button>
-              {m3&&(
-                <div className="m3d">
-                  {isSuper&&<button className="m3i" onClick={()=>{setTab("settings");setM3(false);}}>⚙️ Paramètres</button>}
-                  {isSuper&&<button className="m3i" onClick={()=>{setTab("admins");setM3(false);}}>👥 Admins</button>}
-                  {isSuper&&<button className="m3i" onClick={()=>{setTab("security");setM3(false);}}>🔒 Sécurité</button>}
-                  <button className="m3i" onClick={()=>window.open("https://wa.me/2250787213203","_blank")}>💬 WhatsApp</button>
-                  <hr style={{border:"none",borderTop:"1px solid var(--br)",margin:"4px 0"}}/>
-                  <button className="m3i r" onClick={onLogout}>🚪 Déconnexion</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="ac" onClick={()=>setM3(false)}>
-          {tab==="dashboard"&&<ADash products={products} orders={orders} user={user}/>}
-          {tab==="products" &&<AProds products={products} setProducts={setProducts} showT={show}/>}
-          {tab==="orders"   &&<AOrders orders={orders} setOrders={setOrders} showT={show}/>}
-          {tab==="stock"    &&<AStock products={products} setProducts={setProducts} showT={show}/>}
-          {tab==="stats"    &&<AStats products={products} orders={orders}/>}
-          {tab==="reviews"  &&<AReviews showT={show}/>}
-          {tab==="admins"   &&isSuper&&<AAdmins showT={show}/>}
-          {tab==="settings" &&isSuper&&<ASettings showT={show}/>}
-          {tab==="security" &&isSuper&&<ASecurity showT={show}/>}
-        </div>
-      </div>
-      <Toast t={t}/>
-    </div>
-  );
-}
-
-/* ── DASHBOARD ── */
-function ADash({products,orders,user}){
-  const rev=orders.filter(o=>o.status==="Livré").reduce((s,o)=>s+o.amount,0);
-  const pend=orders.filter(o=>o.status==="En attente").length;
-  const low=products.filter(p=>p.stock<5).length;
-  return(
-    <>
-      <div className="atl">Tableau de bord</div>
-      <div className="asl">Bonjour {user.name} !</div>
-      {pend>0&&<div className="alrt warn">⚠️ <strong>{pend} commande(s)</strong> en attente de validation</div>}
-      <div className="sg">
-        {[{icon:"💰",lbl:"Revenus",val:fmt(rev),tr:"Commandes livrées"},{icon:"🛒",lbl:"Commandes",val:orders.length,tr:`${pend} en attente`},{icon:"📦",lbl:"Produits",val:products.length,tr:"Catalogue"},{icon:"⚠️",lbl:"Stock bas",val:low,tr:low>0?"À réapprovisionner":"✅ OK"}].map((s,i)=>(
-          <div key={i} className="sc"><div className="si2">{s.icon}</div><div className="slbl">{s.lbl}</div><div className="sv">{s.val}</div><div className="str">{s.tr}</div></div>
-        ))}
-      </div>
-      <div className="tw">
-        <div className="tb2"><span style={{fontWeight:600}}>📋 Dernières commandes</span></div>
-        <table><thead><tr><th>ID</th><th>Client</th><th>Produit</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
-          <tbody>{orders.slice(0,5).map(o=>(
-            <tr key={o.id}>
-              <td style={{color:"var(--g)",fontWeight:700,fontSize:11}}>{o.id}</td>
-              <td style={{fontWeight:600}}>{o.client}</td>
-              <td style={{color:"var(--mt)",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.product}</td>
-              <td style={{fontWeight:700}}>{fmt(o.amount)}</td>
-              <td><SBadge status={o.status}/></td>
-              <td style={{color:"var(--mt)",fontSize:11}}>{o.date}</td>
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
-/* ── PRODUCTS ADMIN (CORRIGÉ) ── */
 function AProds({products,setProducts,showT}){
-  const EMPTY={name:"",cat:"Montres",price:"",oldPrice:"",stock:"",desc:"",badge:""};
+  const EMPTY={name:"",cat:"Montres",price:"",oldPrice:"",stock:"",desc:"",badge:"",img:"📦",photos:[]};
   const[form,setForm]=useState(false);
   const[edit,setEdit]=useState(null);
   const[np,setNp]=useState({...EMPTY});
   const[photos,setPhotos]=useState(["","",""]);
   const[err,setErr]=useState("");
   const[q,setQ]=useState("");
-
   const fl=products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase()));
 
   const readFile=(idx,file)=>{
@@ -1021,52 +995,28 @@ function AProds({products,setProducts,showT}){
     r.onload=e=>{const u=[...photos];u[idx]=e.target.result;setPhotos(u);};
     r.readAsDataURL(file);
   };
-
-  const reset=()=>{setNp({...EMPTY});setPhotos(["",""," "]);setErr("");setEdit(null);};
-
-  const openAdd=()=>{reset();setForm(true);};
-
+  const reset=()=>{setNp({...EMPTY});setPhotos(["","",""]);setErr("");setEdit(null);};
   const openEdit=(p)=>{
-    setEdit(p);
-    setNp({name:p.name,cat:p.cat,price:String(p.price),oldPrice:String(p.old||""),stock:String(p.stock),desc:p.desc,badge:p.badge||""});
+    setNp({name:p.name,cat:p.cat,price:String(p.price),oldPrice:p.old?String(p.old):"",stock:String(p.stock),desc:p.desc,badge:p.badge||"",img:p.img||"📦",photos:[]});
     const ph=[...(p.photos||[]),"","",""].slice(0,3);
-    setPhotos(ph);
-    setForm(true);
+    setPhotos(ph);setForm(true);setEdit(p);
   };
-
   const save=()=>{
     setErr("");
     if(!np.name.trim()){setErr("Le nom du produit est obligatoire.");return;}
     if(!np.price||isNaN(parseInt(np.price))){setErr("Entrez un prix valide.");return;}
-
     const validPh=photos.filter(u=>u&&u.trim()!=="");
-    // Photos non obligatoires — si moins de 3, on complète avec tableau vide
-    const emoji=CATS.find(c=>c===np.cat)?{Montres:"⌚",Téléphones:"📱",Voitures:"🚗",Vêtements:"👔",Autres:"🎁"}[np.cat]||"📦":"📦";
-
-    const prod={
-      name:np.name.trim(),
-      cat:np.cat,
-      price:parseInt(np.price),
-      old:np.oldPrice?parseInt(np.oldPrice):null,
-      stock:parseInt(np.stock)||0,
-      desc:np.desc.trim(),
-      badge:np.badge.trim()||null,
-      img:emoji,
-      photos:validPh,
-      r:0,rv:0,
-    };
-
+    const emoji={Montres:"⌚",Téléphones:"📱",Voitures:"🚗",Vêtements:"👔",Autres:"🎁"}[np.cat]||"📦";
+    const prod={name:np.name.trim(),cat:np.cat,price:parseInt(np.price),old:np.oldPrice?parseInt(np.oldPrice):null,stock:parseInt(np.stock)||0,desc:np.desc.trim(),badge:np.badge.trim()||null,img:emoji,photos:validPh,r:edit?edit.r:0,rv:edit?edit.rv:0};
     if(edit){
-      // Mise à jour Firebase
-      if(edit.fireId){
-        updateProduct(edit.fireId, prod).then(()=>showT("Produit modifié ✅")).catch(()=>showT("Erreur modification",true));
-      } else {
-        setProducts(prev=>prev.map(p=>p.id===edit.id?{...p,...prod}:p));
-        showT("Produit modifié ✅");
-      }
+      setProducts(prev=>prev.map(p=>p.id===edit.id?{...p,...prod}:p));
+      if(edit.fireId) updateProduct(edit.fireId,prod).catch(()=>{});
+      showT("Produit modifié ✅");
     }else{
-      // Ajout Firebase
-      addProduct({...prod,id:Date.now()}).then(()=>showT("Produit ajouté ✅ (sauvegardé)")).catch(()=>showT("Erreur ajout",true));
+      const newP={...prod,id:Date.now()};
+      setProducts(prev=>[newP,...prev]);
+      addProduct(newP).catch(()=>{});
+      showT("Produit ajouté ✅");
     }
     reset();setForm(false);
   };
@@ -1074,118 +1024,61 @@ function AProds({products,setProducts,showT}){
   return(
     <>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
-        <div><div className="atl">Gestion Produits</div><div className="asl" style={{marginBottom:0}}>{products.length} produit(s)</div></div>
-        {!form&&<button className="bg" onClick={openAdd}>+ Ajouter un produit</button>}
-        {form&&<button className="bo" style={{padding:"8px 14px",fontSize:12}} onClick={()=>{reset();setForm(false);}}>✕ Annuler</button>}
+        <div><div className="atl">Produits</div><div className="asl">{products.length} produit(s)</div></div>
+        <button className="bg" style={{padding:"8px 16px",fontSize:12}} onClick={()=>{reset();setForm(f=>!f);}}>
+          {form?"✕ Annuler":"+ Ajouter"}
+        </button>
       </div>
-
       {form&&(
-        <div className="tw" style={{padding:18,marginBottom:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>{edit?"✏️ Modifier":"✚ Nouveau produit"}</div>
-
-          {/* CHAMPS PRINCIPAUX */}
+        <div className="tw" style={{padding:16,marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:14}}>{edit?"✏️ Modifier":"✚ Nouveau produit"}</div>
           <div className="pf-grid">
-            <div className="fg2">
-              <label className="fl">Nom du produit *</label>
-              <input className="fi" value={np.name} onChange={e=>setNp({...np,name:e.target.value})} placeholder="Ex : Montre Rolex Gold"/>
-            </div>
-            <div className="fg2">
-              <label className="fl">Catégorie</label>
+            {[["Nom *","name","text","Ex: Montre Rolex"],["Prix (FCFA) *","price","number","150000"],["Ancien prix","oldPrice","number","200000"],["Stock","stock","number","10"],["Badge","badge","text","Nouveau, Populaire…"]].map(([l,k,t,ph])=>(
+              <div key={k} className="fg2"><label className="fl">{l}</label><input className="fi" type={t} value={np[k]||""} onChange={e=>setNp({...np,[k]:e.target.value})} placeholder={ph}/></div>
+            ))}
+            <div className="fg2"><label className="fl">Catégorie</label>
               <select className="fi" value={np.cat} onChange={e=>setNp({...np,cat:e.target.value})}>
-                {CATS.filter(c=>c!=="Tous").map(c=><option key={c}>{c}</option>)}
+                {["Montres","Téléphones","Voitures","Vêtements","Autres"].map(c=><option key={c}>{c}</option>)}
               </select>
             </div>
-            <div className="fg2">
-              <label className="fl">Prix (FCFA) *</label>
-              <input className="fi" type="number" value={np.price} onChange={e=>setNp({...np,price:e.target.value})} placeholder="Ex : 150000"/>
-            </div>
-            <div className="fg2">
-              <label className="fl">Ancien prix (optionnel)</label>
-              <input className="fi" type="number" value={np.oldPrice} onChange={e=>setNp({...np,oldPrice:e.target.value})} placeholder="Ex : 200000"/>
-            </div>
-            <div className="fg2">
-              <label className="fl">Stock</label>
-              <input className="fi" type="number" value={np.stock} onChange={e=>setNp({...np,stock:e.target.value})} placeholder="Ex : 10"/>
-            </div>
-            <div className="fg2">
-              <label className="fl">Badge (optionnel)</label>
-              <input className="fi" value={np.badge} onChange={e=>setNp({...np,badge:e.target.value})} placeholder="Ex : Nouveau, Populaire…"/>
-            </div>
           </div>
-
-          <div className="fg2">
-            <label className="fl">Description</label>
-            <textarea className="fi" value={np.desc} onChange={e=>setNp({...np,desc:e.target.value})} placeholder="Décrivez le produit (caractéristiques, matériaux, taille…)"/>
-          </div>
-
-          {/* PHOTOS */}
-          <div style={{background:"rgba(201,168,76,.07)",border:"1px solid rgba(201,168,76,.22)",borderRadius:9,padding:14,marginBottom:4}}>
-            <div style={{fontWeight:700,color:"var(--g)",fontSize:12,marginBottom:3}}>📸 Photos du produit <span style={{fontWeight:400,color:"var(--mt)"}}>(optionnel — cliquez pour choisir)</span></div>
-            <div style={{fontSize:11,color:"var(--mt)",marginBottom:11}}>Ajoutez jusqu'à 3 photos depuis votre ordinateur. Si aucune photo, une icône sera affichée.</div>
+          <div className="fg2" style={{marginTop:8}}><label className="fl">Description</label><textarea className="fi" rows={2} value={np.desc} onChange={e=>setNp({...np,desc:e.target.value})} placeholder="Description du produit..."/></div>
+          <div style={{marginTop:10,padding:12,background:"#F5F3FF",borderRadius:9,border:"1px solid var(--br)"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--g)",marginBottom:8}}>📸 Photos (3 minimum recommandées)</div>
             <div className="phs">
               {[0,1,2].map(i=>(
                 <div key={i} className={`ph${photos[i]&&photos[i].trim()?" on":""}`}>
-                  {photos[i]&&photos[i].trim()?(
-                    <>
-                      <img src={photos[i]} alt="" onError={e=>{e.target.style.display="none";}}/>
-                      <button className="ph-rm" onClick={e=>{e.stopPropagation();const u=[...photos];u[i]="";setPhotos(u);}}>✕</button>
-                    </>
-                  ):(
-                    <>
-                      <span style={{fontSize:22,pointerEvents:"none"}}>📷</span>
-                      <span className="ph-lbl">Photo {i+1}</span>
-                      <input type="file" accept="image/*" onChange={e=>readFile(i,e.target.files[0])}/>
-                    </>
-                  )}
+                  {photos[i]&&photos[i].trim()?<><img src={photos[i]} alt=""/><button className="ph-rm" onClick={e=>{e.stopPropagation();const u=[...photos];u[i]="";setPhotos(u);}}>✕</button></>:<><span style={{fontSize:22,pointerEvents:"none"}}>📷</span><span className="ph-lbl">Photo {i+1}</span></>}
+                  {!(photos[i]&&photos[i].trim())&&<input type="file" accept="image/*" onChange={e=>readFile(i,e.target.files[0])}/>}
                 </div>
               ))}
             </div>
-            <div style={{fontSize:10,color:"var(--mt)",textAlign:"center"}}>{photos.filter(u=>u&&u.trim()).length}/3 photo(s) ajoutée(s)</div>
           </div>
-
-          {err&&<div className="alrt err" style={{marginTop:10}}>⚠️ {err}</div>}
-
-          <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
-            <button className="bg" onClick={save}>✅ {edit?"Sauvegarder les modifications":"Enregistrer le produit"}</button>
-            <button className="bo" style={{padding:"10px 16px"}} onClick={()=>{reset();setForm(false);}}>Annuler</button>
+          {err&&<div className="alrt err" style={{marginTop:8}}>⚠️ {err}</div>}
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button className="bg" style={{padding:"9px 18px",fontSize:12}} onClick={save}>✅ Enregistrer</button>
+            <button className="bo" style={{padding:"9px 14px",fontSize:12}} onClick={()=>{reset();setForm(false);}}>Annuler</button>
           </div>
         </div>
       )}
-
-      {/* SEARCH */}
-      <div className="sw" style={{marginBottom:14}}>
-        <span className="si">🔍</span>
-        <input className="sinp" placeholder="Rechercher un produit..." value={q} onChange={e=>setQ(e.target.value)}/>
-      </div>
-
-      {/* TABLE */}
+      <div className="sw" style={{marginBottom:12}}><span className="si">🔍</span><input className="sinp" placeholder="Rechercher un produit..." value={q} onChange={e=>setQ(e.target.value)}/></div>
       <div className="tw">
         <table><thead><tr><th>Photo</th><th>Produit</th><th>Cat.</th><th>Prix</th><th>Stock</th><th>Actions</th></tr></thead>
-          <tbody>
-            {fl.length===0&&<tr><td colSpan={6} style={{textAlign:"center",color:"var(--mt)",padding:24}}>Aucun produit trouvé.</td></tr>}
-            {fl.map(p=>(
-              <tr key={p.id}>
-                <td>
-                  <div style={{width:40,height:40,borderRadius:7,overflow:"hidden",background:"var(--c2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
-                    {p.photos?.[0]?<img src={p.photos[0]} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";}}/>:p.img}
-                  </div>
-                </td>
-                <td>
-                  <div style={{fontWeight:600,fontSize:12}}>{p.name}</div>
-                  {p.photos?.length>0&&<div style={{fontSize:9,color:"var(--g)"}}>{p.photos.length} photo(s)</div>}
-                </td>
-                <td><span className="sbg s-c" style={{fontSize:9}}>{p.cat}</span></td>
-                <td style={{color:"var(--g)",fontWeight:700,fontSize:11}}>{fmt(p.price)}</td>
-                <td><span style={{color:p.stock<5?"var(--rd)":"var(--gn)",fontWeight:700}}>{p.stock}</span></td>
-                <td>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                    <button className="ab ed" onClick={()=>openEdit(p)}>✏️ Modifier</button>
-                    <button className="ab dl" onClick={()=>{setProducts(prev=>prev.filter(x=>x.id!==p.id));showT("Produit supprimé");}}>🗑</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+          <tbody>{fl.map(p=>(
+            <tr key={p.id}>
+              <td><div style={{width:40,height:40,borderRadius:7,overflow:"hidden",background:"#F5F3FF",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>
+                {p.photos?.[0]?<img src={p.photos[0]} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";}}/>:p.img}
+              </div></td>
+              <td><div style={{fontWeight:600,fontSize:12,color:"var(--tx)"}}>{p.name}</div>{p.badge&&<span style={{fontSize:9,color:"var(--g)"}}>{p.badge}</span>}</td>
+              <td><span className="sbg s-c" style={{fontSize:9}}>{p.cat}</span></td>
+              <td style={{fontWeight:700,color:"var(--g)",fontSize:12}}>{fmt(p.price)}</td>
+              <td style={{color:p.stock<5?"var(--rd)":"var(--gn)",fontWeight:700}}>{p.stock}</td>
+              <td><div style={{display:"flex",gap:4}}>
+                <button className="ab ed" onClick={()=>openEdit(p)}>✏️</button>
+                <button className="ab dl" onClick={()=>{if(window.confirm("Supprimer ?")){{setProducts(prev=>prev.filter(x=>x.id!==p.id));if(p.fireId)deleteProduct(p.fireId).catch(()=>{});showT("Produit supprimé");}}}}>🗑</button>
+              </div></td>
+            </tr>
+          ))}</tbody>
         </table>
       </div>
     </>
@@ -1194,37 +1087,31 @@ function AProds({products,setProducts,showT}){
 
 /* ── ORDERS ── */
 function AOrders({orders,setOrders,showT}){
-  const[f,setF]=useState("Tous");
-  const fl=f==="Tous"?orders:orders.filter(o=>o.status===f);
-  const upd=(id,st)=>{setOrders(prev=>prev.map(o=>o.id===id?{...o,status:st}:o));showT(`Statut → ${st}`);
-    const ord=orders.find(o=>o.id===id); if(ord?.fireId) updateOrderStatus(ord.fireId,st).catch(()=>{});};
+  const[q,setQ]=useState("");
+  const fl=orders.filter(o=>o.client.toLowerCase().includes(q.toLowerCase())||o.product.toLowerCase().includes(q.toLowerCase()));
   return(
     <>
-      <div className="atl">Commandes</div>
-      <div className="asl">Validez et suivez toutes les commandes</div>
-      <div className="cts" style={{marginBottom:14}}>{["Tous",...STATUSES].map(s=><button key={s} className={`cb${f===s?" on":""}`} onClick={()=>setF(s)}>{s}</button>)}</div>
+      <div className="atl">Commandes</div><div className="asl">{orders.length} commande(s)</div>
+      <div className="sw" style={{marginBottom:12}}><span className="si">🔍</span><input className="sinp" placeholder="Rechercher..." value={q} onChange={e=>setQ(e.target.value)}/></div>
       <div className="tw">
-        <div className="tb2"><span style={{fontWeight:600}}>📋 {fl.length} commande(s)</span></div>
-        <table><thead><tr><th>ID</th><th>Client</th><th>Tel</th><th>Produit</th><th>Montant</th><th>Lieu</th><th>Statut</th><th>Modifier</th></tr></thead>
-          <tbody>
-            {fl.length===0&&<tr><td colSpan={8} style={{textAlign:"center",color:"var(--mt)",padding:20}}>Aucune commande.</td></tr>}
-            {fl.map(o=>(
-              <tr key={o.id}>
-                <td style={{color:"var(--g)",fontWeight:700,fontSize:10}}>{o.id}</td>
-                <td style={{fontWeight:600}}>{o.client}</td>
-                <td style={{color:"var(--mt)",fontSize:11}}>{o.phone}</td>
-                <td style={{color:"var(--mt)",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.product}</td>
-                <td style={{fontWeight:700}}>{fmt(o.amount)}</td>
-                <td style={{color:"var(--mt)",fontSize:11}}>{o.lieu}</td>
-                <td><SBadge status={o.status}/></td>
-                <td>
-                  <select className="fi" style={{padding:"4px 7px",fontSize:11,width:"auto"}} value={o.status} onChange={e=>upd(o.id,e.target.value)}>
-                    {STATUSES.map(s=><option key={s}>{s}</option>)}
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+        <table><thead><tr><th>ID</th><th>Client</th><th>Téléphone</th><th>Produit</th><th>Montant</th><th>Lieu</th><th>Statut</th><th>Date</th></tr></thead>
+          <tbody>{fl.map(o=>(
+            <tr key={o.id}>
+              <td style={{fontFamily:"monospace",fontSize:10,color:"var(--g)"}}>{o.id}</td>
+              <td style={{fontWeight:600,color:"var(--tx)"}}>{o.client}</td>
+              <td style={{color:"var(--mt)",fontSize:11}}>{o.phone}</td>
+              <td style={{color:"var(--mt)",fontSize:11}}>{o.product}</td>
+              <td style={{fontWeight:700,color:"var(--g)",fontSize:12}}>{fmt(o.amount)}</td>
+              <td style={{color:"var(--mt)",fontSize:11}}>{o.lieu}</td>
+              <td>
+                <select className="fi" style={{padding:"3px 6px",fontSize:10,width:"auto"}} value={o.status}
+                  onChange={e=>{const st=e.target.value;setOrders(prev=>prev.map(x=>x.id===o.id?{...x,status:st}:x));if(o.fireId)updateOrderStatus(o.fireId,st).catch(()=>{});showT("Statut mis à jour");}}>
+                  {["En attente","En cours","Livré","Annulé"].map(s=><option key={s}>{s}</option>)}
+                </select>
+              </td>
+              <td style={{color:"var(--mt)",fontSize:10}}>{o.date}</td>
+            </tr>
+          ))}</tbody>
         </table>
       </div>
     </>
@@ -1233,22 +1120,23 @@ function AOrders({orders,setOrders,showT}){
 
 /* ── STOCK ── */
 function AStock({products,setProducts,showT}){
-  const low=products.filter(p=>p.stock<5);
-  const upd=(id,v)=>{const n=parseInt(v);if(isNaN(n)||n<0)return;setProducts(prev=>prev.map(p=>p.id===id?{...p,stock:n}:p));showT("Stock mis à jour !");};
   return(
     <>
-      <div className="atl">Gestion Stock</div>
-      <div className="asl">Mettez à jour les stocks en temps réel</div>
-      {low.length>0&&<div className="alrt err">⚠️ {low.length} produit(s) en stock bas : {low.map(p=>p.name).join(", ")}</div>}
+      <div className="atl">Stock</div><div className="asl">Gérez le stock de vos produits</div>
       <div className="tw">
-        <table><thead><tr><th>Produit</th><th>Catégorie</th><th>Stock</th><th>Statut</th><th>Modifier</th></tr></thead>
+        <table><thead><tr><th>Produit</th><th>Catégorie</th><th>Stock actuel</th><th>Modifier</th></tr></thead>
           <tbody>{products.map(p=>(
             <tr key={p.id}>
-              <td><div style={{display:"flex",alignItems:"center",gap:7}}><span style={{fontSize:16}}>{p.img}</span><span style={{fontWeight:600,fontSize:12}}>{p.name}</span></div></td>
+              <td style={{fontWeight:600,fontSize:12,color:"var(--tx)"}}>{p.name}</td>
               <td><span className="sbg s-c" style={{fontSize:9}}>{p.cat}</span></td>
-              <td><span style={{fontWeight:700,fontSize:14,color:p.stock===0?"var(--rd)":p.stock<5?"var(--or)":"var(--gn)"}}>{p.stock}</span></td>
-              <td><span className={`sbg ${p.stock===0?"s-x":p.stock<5?"s-a":"s-l"}`}>● {p.stock===0?"Rupture":p.stock<5?"Stock bas":"En stock"}</span></td>
-              <td><div style={{display:"flex",alignItems:"center",gap:5}}><input type="number" className="fi" style={{width:70,padding:"4px 8px",fontSize:12}} defaultValue={p.stock} onBlur={e=>upd(p.id,e.target.value)} min="0"/><span style={{fontSize:10,color:"var(--mt)"}}>unités</span></div></td>
+              <td><span style={{fontWeight:700,color:p.stock<5?"var(--rd)":p.stock<10?"var(--or)":"var(--gn)"}}>{p.stock}</span></td>
+              <td>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <button className="ab ed" onClick={()=>{setProducts(prev=>prev.map(x=>x.id===p.id?{...x,stock:Math.max(0,x.stock-1)}:x));}}>−</button>
+                  <span style={{fontWeight:700,minWidth:24,textAlign:"center",color:"var(--tx)"}}>{p.stock}</span>
+                  <button className="ab ok" onClick={()=>{setProducts(prev=>prev.map(x=>x.id===p.id?{...x,stock:x.stock+1}:x));}}>+</button>
+                </div>
+              </td>
             </tr>
           ))}</tbody>
         </table>
@@ -1259,40 +1147,25 @@ function AStock({products,setProducts,showT}){
 
 /* ── STATS ── */
 function AStats({products,orders}){
-  const dlv=orders.filter(o=>o.status==="Livré");
-  const rev=dlv.reduce((s,o)=>s+o.amount,0);
-  const avg=dlv.length>0?Math.round(rev/dlv.length):0;
-  const catD=CATS.filter(c=>c!=="Tous").map(cat=>({cat,n:orders.filter(o=>{const p=products.find(x=>x.name===o.product);return p?.cat===cat;}).length})).sort((a,b)=>b.n-a.n);
-  const mx=Math.max(...catD.map(c=>c.n),1);
-  const cols=["var(--bl)","var(--g)","var(--gn)","var(--or)","var(--rd)"];
+  const total=orders.filter(o=>o.status==="Livré").reduce((s,o)=>s+o.amount,0);
+  const cats=["Montres","Téléphones","Voitures","Vêtements","Autres"].map(c=>({c,n:orders.filter(o=>products.find(p=>p.name===o.product&&p.cat===c)).length}));
+  const maxN=Math.max(...cats.map(c=>c.n),1);
   return(
     <>
-      <div className="atl">Statistiques</div>
-      <div className="asl">Performance de la boutique</div>
+      <div className="atl">Statistiques</div><div className="asl">Aperçu des performances</div>
       <div className="sg">
-        {[{icon:"💰",lbl:"Revenus livrés",val:fmt(rev),tr:`${dlv.length} commandes`},{icon:"🛒",lbl:"Total commandes",val:orders.length,tr:`${orders.filter(o=>o.status==="En attente").length} en attente`},{icon:"💸",lbl:"Panier moyen",val:fmt(avg),tr:"Sur livrées"},{icon:"📦",lbl:"Produits",val:products.length,tr:`${products.filter(p=>p.stock>0).length} en stock`}].map((s,i)=>(
-          <div key={i} className="sc"><div className="si2">{s.icon}</div><div className="slbl">{s.lbl}</div><div className="sv" style={{fontSize:"clamp(14px,3.5vw,20px)"}}>{s.val}</div><div className="str">{s.tr}</div></div>
+        {[{icon:"💰",lbl:"CA (Livré)",val:fmt(total)},{icon:"🛒",lbl:"Commandes",val:orders.length},{icon:"📦",lbl:"Produits",val:products.length},{icon:"⏳",lbl:"En attente",val:orders.filter(o=>o.status==="En attente").length}].map((s,i)=>(
+          <div key={i} className="sc"><div className="si2">{s.icon}</div><div className="slbl">{s.lbl}</div><div className="sv">{s.val}</div></div>
         ))}
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(280px,100%),1fr))",gap:14}}>
-        <div className="tw" style={{padding:16}}>
-          <div style={{fontWeight:700,marginBottom:14}}>📊 Ventes par catégorie</div>
-          {catD.map((s,i)=>(
-            <div key={i} className="br2">
-              <span style={{fontSize:11,color:"var(--mt)",minWidth:80}}>{s.cat}</span>
-              <div className="brk"><div className="brf" style={{width:`${(s.n/mx)*100}%`,background:cols[i]}}/></div>
-              <span style={{fontSize:11,fontWeight:700,color:cols[i],minWidth:24,textAlign:"right"}}>{s.n}</span>
-            </div>
-          ))}
-        </div>
-        <div className="tw" style={{padding:16}}>
-          <div style={{fontWeight:700,marginBottom:14}}>📋 Statuts commandes</div>
-          {STATUSES.map(s=>(
-            <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
-              <SBadge status={s}/><span style={{fontWeight:700,fontSize:15}}>{orders.filter(o=>o.status===s).length}</span>
-            </div>
-          ))}
-        </div>
+      <div className="tw" style={{padding:16}}>
+        <div style={{fontWeight:700,marginBottom:14,color:"var(--tx)"}}>📊 Ventes par catégorie</div>
+        {cats.map(({c,n})=>(
+          <div key={c} style={{marginBottom:11}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4,color:"var(--tx)"}}><span>{c}</span><span style={{fontWeight:700,color:"var(--g)"}}>{n}</span></div>
+            <div style={{background:"#E5E7EB",borderRadius:4,height:7}}><div style={{background:"linear-gradient(90deg,var(--g),var(--pk))",width:`${(n/maxN)*100}%`,height:"100%",borderRadius:4,transition:".5s"}}/></div>
+          </div>
+        ))}
       </div>
     </>
   );
@@ -1300,96 +1173,81 @@ function AStats({products,orders}){
 
 /* ── REVIEWS ── */
 function AReviews({showT}){
-  const[revs,setRevs]=useState([
-    {id:1,av:"K",name:"Konan Beatrice",date:"15 Mars 2025",r:5,txt:"Commande reçue en 24h ! Produit magnifique. Je recommande !",st:"approuvé"},
-    {id:2,av:"T",name:"Traoré Ibrahim",date:"10 Mars 2025",r:5,txt:"iPhone 15 livré le lendemain. Authentique avec facture. Merci !",st:"approuvé"},
-    {id:3,av:"C",name:"Coulibaly Aminata",date:"05 Mars 2025",r:4,txt:"Boubou splendide. Service après-vente très arrangeant. Je reviendrai !",st:"en attente"},
-  ]);
+  const REVS=[
+    {name:"Konan Beatrice",av:"K",r:5,date:"15 Mars 2025",txt:"Commande reçue en 24h ! Produit magnifique. Je recommande !",approved:true},
+    {name:"Traoré Ibrahim",av:"T",r:5,date:"10 Mars 2025",txt:"iPhone 15 livré le lendemain. Authentique avec facture.",approved:true},
+    {name:"Coulibaly Aminata",av:"C",r:4,date:"05 Mars 2025",txt:"Boubou splendide. Service après-vente très arrangeant.",approved:false},
+  ];
+  const[revs,setRevs]=useState(REVS);
   return(
     <>
-      <div className="atl">Avis Clients</div>
-      <div className="asl">Modérez les avis publiés</div>
-      <div className="rg">{revs.map(rv=>(
-        <div key={rv.id} className="rc">
-          <div className="rt"><div className="ra">{rv.av}</div><div><div className="rn">{rv.name}</div><div className="rd">{rv.date}</div></div></div>
-          <div className="rs">{star(rv.r)}</div><p className="rx">{rv.txt}</p>
-          <div style={{marginTop:11,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
-            <span className={`sbg ${rv.st==="approuvé"?"s-l":"s-a"}`}>● {rv.st}</span>
-            <div style={{display:"flex",gap:5}}>
-              <button className="ab ok" onClick={()=>{setRevs(p=>p.map(x=>x.id===rv.id?{...x,st:"approuvé"}:x));showT("Avis approuvé");}}>✓ Approuver</button>
-              <button className="ab dl" onClick={()=>{setRevs(p=>p.filter(x=>x.id!==rv.id));showT("Avis supprimé");}}>✕ Suppr.</button>
+      <div className="atl">Avis clients</div><div className="asl">Modérez les avis publiés</div>
+      <div className="rg">
+        {revs.map((r,i)=>(
+          <div key={i} className="rc">
+            <div className="rt"><div className="ra">{r.av}</div><div><div className="rn" style={{color:"var(--tx)"}}>{r.name}</div><div className="rd">{r.date}</div></div></div>
+            <div className="rs">{star(r.r)}</div>
+            <p className="rx">{r.txt}</p>
+            <div style={{display:"flex",gap:6,marginTop:11,flexWrap:"wrap"}}>
+              <button className="ab ok" onClick={()=>{setRevs(p=>p.map((x,j)=>j===i?{...x,approved:true}:x));showT("Approuvé ✅");}}>✓ {r.approved?"Approuvé":"Approuver"}</button>
+              <button className="ab dl" onClick={()=>{setRevs(p=>p.filter((_,j)=>j!==i));showT("Avis supprimé");}}>🗑 Supprimer</button>
             </div>
           </div>
-        </div>
-      ))}</div>
+        ))}
+      </div>
     </>
   );
 }
 
 /* ── ADMINS ── */
-function AAdmins({showT}){
+const P_SUPER=["Tout gérer","Ajouter des admins","Supprimer des admins","Voir les stats","Gérer les produits","Gérer les commandes"];
+const P_ADMIN=["Gérer les produits","Gérer les commandes","Gérer le stock","Voir les avis"];
+function AAdmins({user,showT}){
   const[adms,setAdms]=useState([
-    {id:"Bilalboss1",name:"Bilal",  role:"superadmin",st:"actif",last:"Aujourd'hui"},
-    {id:"Admin1",    name:"Admin 1",role:"admin",      st:"actif",last:"Hier"},
-    {id:"Admin2",    name:"Admin 2",role:"admin",      st:"actif",last:"22/03/2025"},
+    {id:"Bilalboss1",name:"Bilal",role:"superadmin",st:"actif",last:"Maintenant"},
+    {id:"Admin1",name:"Admin 1",role:"admin",st:"actif",last:"Hier"},
+    {id:"Admin2",name:"Admin 2",role:"admin",st:"actif",last:"22/03/2025"},
   ]);
   const[sf,setSF]=useState(false);
   const[na,setNA]=useState({id:"",name:"",pw:"",role:"admin"});
-  const P_SUPER=["Gérer tous les produits","Gérer toutes les commandes","Gérer les admins","Statistiques complètes","Configurer le site","Gérer paiements","Sécurité","Sauvegardes"];
-  const P_ADMIN=["Ajouter/modifier produits","Gérer les commandes","Mettre à jour stock","Répondre aux clients"];
   return(
     <>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
-        <div><div className="atl">Gestion des Admins</div><div className="asl" style={{marginBottom:0}}>Créez et gérez les comptes</div></div>
-        <button className="bg" onClick={()=>setSF(f=>!f)}>{sf?"✕ Annuler":"+ Créer un admin"}</button>
-      </div>
+      <div className="atl">Gestion Admins</div><div className="asl">Gérez les comptes administrateurs</div>
+      {user.role==="superadmin"&&(
+        <button className="bg" style={{marginBottom:14,padding:"8px 16px",fontSize:12}} onClick={()=>setSF(f=>!f)}>{sf?"✕ Annuler":"+ Nouveau compte"}</button>
+      )}
       {sf&&(
-        <div className="tw" style={{padding:16,marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:13}}>✚ Nouveau compte admin</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,100%),1fr))",gap:9}}>
-            <div className="fg2"><label className="fl">Nom complet</label><input className="fi" value={na.name} onChange={e=>setNA({...na,name:e.target.value})} placeholder="Ex : Marie Konan"/></div>
-            <div className="fg2"><label className="fl">Identifiant (ID)</label><input className="fi" value={na.id} onChange={e=>setNA({...na,id:e.target.value})} placeholder="Ex : Admin3"/></div>
-            <div className="fg2"><label className="fl">Mot de passe</label><input className="fi" type="password" value={na.pw} onChange={e=>setNA({...na,pw:e.target.value})} placeholder="Minimum 8 caractères"/></div>
+        <div className="tw" style={{padding:14,marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:12,marginBottom:12,color:"var(--tx)"}}>✚ Nouveau compte admin</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,100%),1fr))",gap:8}}>
+            <div className="fg2"><label className="fl">Nom</label><input className="fi" value={na.name} onChange={e=>setNA({...na,name:e.target.value})} placeholder="Ex: Marie Konan"/></div>
+            <div className="fg2"><label className="fl">Identifiant</label><input className="fi" value={na.id} onChange={e=>setNA({...na,id:e.target.value})} placeholder="Ex: Admin3"/></div>
+            <div className="fg2"><label className="fl">Mot de passe</label><input className="fi" type="password" value={na.pw} onChange={e=>setNA({...na,pw:e.target.value})} placeholder="Min. 8 caractères"/></div>
             <div className="fg2"><label className="fl">Rôle</label>
               <select className="fi" value={na.role} onChange={e=>setNA({...na,role:e.target.value})}>
                 <option value="admin">Admin</option><option value="superadmin">Super Admin</option>
               </select>
             </div>
           </div>
-          <div style={{display:"flex",gap:8,marginTop:11}}>
-            <button className="bg" onClick={()=>{if(!na.name||!na.id||!na.pw){showT("Remplissez tous les champs !",true);return;}setAdms(p=>[...p,{...na,st:"actif",last:"Jamais"}]);setNA({id:"",name:"",pw:"",role:"admin"});setSF(false);showT("Compte créé !");}}>✅ Créer</button>
-            <button className="bo" style={{padding:"9px 14px"}} onClick={()=>setSF(false)}>Annuler</button>
-          </div>
+          <button className="bg" style={{marginTop:10,padding:"8px 16px",fontSize:12}} onClick={()=>{if(!na.name||!na.id||!na.pw){showT("Remplissez tous les champs",true);return;}setAdms(p=>[...p,{...na,st:"actif",last:"Jamais"}]);setNA({id:"",name:"",pw:"",role:"admin"});setSF(false);showT("Compte créé ✅");}}>✅ Créer</button>
         </div>
       )}
-      <div className="tw" style={{marginBottom:16}}>
-        <table><thead><tr><th>Nom</th><th>ID</th><th>Rôle</th><th>Statut</th><th>Dernière co.</th><th>Actions</th></tr></thead>
+      <div className="tw">
+        <table><thead><tr><th>Nom</th><th>ID</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
           <tbody>{adms.map((a,i)=>(
             <tr key={i}>
-              <td style={{fontWeight:600}}>{a.name}</td>
-              <td style={{fontFamily:"monospace",fontSize:11,color:"var(--mt)"}}>{a.id}</td>
-              <td><span className={`sbg ${a.role==="superadmin"?"s-s":"s-d"}`}>{a.role==="superadmin"?"👑 Super Admin":"🔧 Admin"}</span></td>
+              <td style={{fontWeight:600,color:"var(--tx)"}}>{a.name}</td>
+              <td style={{fontFamily:"monospace",fontSize:10,color:"var(--mt)"}}>{a.id}</td>
+              <td><span className={`sbg ${a.role==="superadmin"?"s-s":"s-d"}`}>{a.role==="superadmin"?"👑 Super":"🔧 Admin"}</span></td>
               <td><span className={`sbg ${a.st==="actif"?"s-l":"s-x"}`}>● {a.st}</span></td>
-              <td style={{color:"var(--mt)",fontSize:11}}>{a.last}</td>
-              <td>
-                {a.role!=="superadmin"?(
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                    <button className="ab ok" onClick={()=>{setAdms(p=>p.map(x=>x.id===a.id?{...x,st:x.st==="actif"?"bloqué":"actif"}:x));showT(a.st==="actif"?"Compte bloqué":"Compte activé");}}>{a.st==="actif"?"🔒 Bloquer":"✅ Activer"}</button>
-                    <button className="ab dl" onClick={()=>{setAdms(p=>p.filter(x=>x.id!==a.id));showT("Compte supprimé");}}>🗑</button>
-                  </div>
-                ):<span style={{fontSize:10,color:"var(--mt)"}}>Protégé</span>}
+              <td>{a.role!=="superadmin"?(<div style={{display:"flex",gap:4}}>
+                <button className="ab ok" onClick={()=>{setAdms(p=>p.map((x,j)=>j===i?{...x,st:x.st==="actif"?"bloqué":"actif"}:x));showT("Statut modifié");}}>{a.st==="actif"?"🔒":"✅"}</button>
+                <button className="ab dl" onClick={()=>{setAdms(p=>p.filter((_,j)=>j!==i));showT("Supprimé");}}>🗑</button>
+              </div>):<span style={{fontSize:10,color:"var(--mt)"}}>Protégé</span>}
               </td>
             </tr>
           ))}</tbody>
         </table>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(250px,100%),1fr))",gap:12}}>
-        {[{role:"Super Admin",icon:"👑",perms:P_SUPER,col:"var(--g)"},{role:"Admin",icon:"🔧",perms:P_ADMIN,col:"var(--bl)"}].map((rr,i)=>(
-          <div key={i} className="tw" style={{padding:14}}>
-            <div style={{fontWeight:700,marginBottom:12,color:rr.col}}>{rr.icon} Permissions — {rr.role}</div>
-            <div className="prg">{rr.perms.map((pp,j)=><div key={j} className="pri"><span style={{color:"var(--gn)"}}>✓</span><span>{pp}</span></div>)}</div>
-          </div>
-        ))}
       </div>
     </>
   );
@@ -1397,114 +1255,184 @@ function AAdmins({showT}){
 
 /* ── SETTINGS ── */
 function ASettings({showT}){
-  const[s,setS]=useState({nom:"Baark Wendé Store",devise:"FCFA",tel1:"0170260670",tel2:"+225 0787213203",loc:"Côte d'Ivoire",fb:"Baark Wendé Store",wa:"2250787213203"});
+  const[s,setS]=useState({nom:"Baark Wendé Store",tel1:"0170260670",tel2:"+225 0787213203",loc:"Côte d'Ivoire",fb:"Baark Wendé Store",wa:"2250787213203"});
   return(
     <>
-      <div className="atl">Paramètres</div>
-      <div className="asl">Configurez les informations de la boutique</div>
-      <div className="tw" style={{padding:18,marginBottom:14}}>
-        <div style={{fontWeight:700,marginBottom:14}}>🏪 Informations boutique</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(200px,100%),1fr))",gap:10}}>
-          {[["Nom","nom"],["Devise","devise"],["Téléphone 1","tel1"],["Téléphone 2","tel2"],["Localisation","loc"],["Page Facebook","fb"],["WhatsApp (numéro)","wa"]].map(([l,k])=>(
+      <div className="atl">Paramètres</div><div className="asl">Informations de la boutique</div>
+      <div className="tw" style={{padding:16,marginBottom:14}}>
+        <div style={{fontWeight:700,marginBottom:12,color:"var(--tx)"}}>🏪 Informations</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(200px,100%),1fr))",gap:9}}>
+          {[["Nom","nom"],["Téléphone 1","tel1"],["Téléphone 2","tel2"],["Localisation","loc"],["Page Facebook","fb"],["WhatsApp","wa"]].map(([l,k])=>(
             <div key={k} className="fg2"><label className="fl">{l}</label><input className="fi" value={s[k]} onChange={e=>setS({...s,[k]:e.target.value})}/></div>
           ))}
         </div>
-        <button className="bg" style={{marginTop:14,padding:"10px 22px"}} onClick={()=>showT("Paramètres sauvegardés !")}>💾 Sauvegarder</button>
-      </div>
-      <div className="tw" style={{padding:16}}>
-        <div style={{fontWeight:700,marginBottom:12}}>💾 Sauvegardes</div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {[["📦 Produits","Produits exportés !"],["🛒 Commandes","Commandes exportées !"],["🔄 Tout sauvegarder","Sauvegarde complète !"]].map(([l,m])=>(
-            <button key={l} className="bo" style={{padding:"9px 14px",fontSize:12}} onClick={()=>showT(m)}>{l}</button>
-          ))}
-        </div>
+        <button className="bg" style={{marginTop:12,padding:"9px 20px",fontSize:12}} onClick={()=>showT("Paramètres sauvegardés ✅")}>💾 Sauvegarder</button>
       </div>
     </>
   );
 }
 
 /* ── SECURITY ── */
-function ASecurity({showT}){
+function ASecurity(){
   const logs=[
-    {time:"Aujourd'hui 14:32",user:"Bilal (Super Admin)",action:"Connexion réussie",ip:"192.168.1.1"},
-    {time:"Aujourd'hui 11:15",user:"Admin 1",action:"Produit ajouté",ip:"192.168.1.2"},
-    {time:"Hier 16:44",user:"Admin 2",action:"Commande validée",ip:"192.168.1.3"},
-    {time:"Hier 09:20",user:"Inconnu",action:"⚠️ Tentative échouée",ip:"105.112.32.4"},
-    {time:"22/03 13:00",user:"Admin 1",action:"Stock mis à jour",ip:"192.168.1.2"},
+    {time:"Aujourd'hui 14:32",user:"Bilal (Super Admin)",action:"Connexion réussie"},
+    {time:"Aujourd'hui 11:15",user:"Admin 1",action:"Produit ajouté"},
+    {time:"Hier 16:44",user:"Admin 2",action:"Commande validée"},
+    {time:"Hier 09:20",user:"Inconnu",action:"⚠️ Tentative échouée"},
   ];
   return(
     <>
-      <div className="atl">Sécurité</div>
-      <div className="asl">Surveillez les activités de la plateforme</div>
-      <div className="sg">
-        {[{icon:"✅",lbl:"Connexions réussies",val:4,tr:"Dernières 24h"},{icon:"🔴",lbl:"Tentatives échouées",val:1,tr:"À surveiller"},{icon:"👥",lbl:"Admins actifs",val:3,tr:"En ligne"},{icon:"🔒",lbl:"Sécurité",val:"Élevé",tr:"✅ Bon état"}].map((s,i)=>(
-          <div key={i} className="sc"><div className="si2">{s.icon}</div><div className="slbl">{s.lbl}</div><div className="sv" style={{fontSize:18}}>{s.val}</div><div className="str">{s.tr}</div></div>
-        ))}
-      </div>
-      <div className="tw" style={{marginBottom:14}}>
-        <div className="tb2"><span style={{fontWeight:600}}>📋 Journal d'activités</span></div>
-        <table><thead><tr><th>Heure</th><th>Utilisateur</th><th>Action</th><th>IP</th></tr></thead>
+      <div className="atl">Sécurité</div><div className="asl">Journal des activités</div>
+      <div className="tw">
+        <table><thead><tr><th>Heure</th><th>Utilisateur</th><th>Action</th></tr></thead>
           <tbody>{logs.map((l,i)=>(
             <tr key={i}>
               <td style={{color:"var(--mt)",fontSize:10}}>{l.time}</td>
-              <td style={{fontWeight:600}}>{l.user}</td>
+              <td style={{fontWeight:600,color:"var(--tx)"}}>{l.user}</td>
               <td style={{color:l.action.includes("⚠️")?"var(--rd)":"var(--mt)"}}>{l.action}</td>
-              <td style={{fontFamily:"monospace",fontSize:10,color:"var(--mt)"}}>{l.ip}</td>
             </tr>
           ))}</tbody>
         </table>
-      </div>
-      <div className="tw" style={{padding:16}}>
-        <div style={{fontWeight:700,marginBottom:11}}>🔒 Actions</div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {[["🔄 Changer MDP","Redirection..."],["📧 Alertes email","Alertes activées !"],["🗄️ Purger logs","Logs purgés !"]].map(([l,m])=>(
-            <button key={l} className="bo" style={{padding:"9px 13px",fontSize:12}} onClick={()=>showT(m)}>{l}</button>
-          ))}
-        </div>
       </div>
     </>
   );
 }
 
 /* ═══════════════════════════════════════════
-   ROOT
+   ADMIN APP
+═══════════════════════════════════════════ */
+function AdminApp({user,onLogout,products,setProducts,orders,setOrders}){
+  const[tab,setTab]=useState("dashboard");
+  const[mobSB,setMSB]=useState(false);
+  const[t,show]=useToast();
+  const isSuper=user.role==="superadmin";
+
+  const NAV=[
+    {id:"dashboard",icon:"📊",label:"Dashboard"},
+    {id:"products", icon:"📦",label:"Produits"},
+    {id:"orders",   icon:"🛒",label:"Commandes"},
+    {id:"stock",    icon:"📈",label:"Stock"},
+    {id:"stats",    icon:"📉",label:"Statistiques"},
+    {id:"reviews",  icon:"⭐",label:"Avis clients"},
+    ...(isSuper?[{id:"admins",icon:"👥",label:"Admins"},{id:"settings",icon:"⚙️",label:"Paramètres"},{id:"security",icon:"🔒",label:"Sécurité"}]:[]),
+  ];
+
+  return(
+    <div className="aw">
+      <div className={`sb-back${mobSB?" on":""}`} onClick={()=>setMSB(false)}/>
+      <div className={`sb${mobSB?" mob-on":""}`}>
+        <div className="sbl">
+          <div className="br" style={{cursor:"default"}}>
+            <div className="bl" style={{background:"#fff",padding:3}}><img src={LOGO} alt="logo" style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
+            <div><div className="bn" style={{fontSize:12,color:"#fff"}}>Admin</div><div className="bs">Baark Wendé</div></div>
+          </div>
+        </div>
+        <div className="sbu">
+          <div style={{fontWeight:600,fontSize:11,marginBottom:4,color:"#fff"}}>{user.name}</div>
+          <span className={`ubg ${user.role==="superadmin"?"sup":"adm"}`}>{user.role==="superadmin"?"👑 Super Admin":"🔧 Admin"}</span>
+        </div>
+        <div className="sbn">
+          {NAV.map(n=>(
+            <button key={n.id} className={`an${tab===n.id?" on":""}`} onClick={()=>{setTab(n.id);setMSB(false);}}>
+              <span>{n.icon}</span><span>{n.label}</span>
+            </button>
+          ))}
+          <button className="an dg" style={{marginTop:16}} onClick={onLogout}><span>🚪</span><span>Déconnexion</span></button>
+        </div>
+      </div>
+
+      <div className="am">
+        <div className="at">
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <button className="m3b" onClick={()=>setMSB(o=>!o)} style={{display:"flex",alignItems:"center",justifyContent:"center"}}>☰</button>
+            <div>
+              <div style={{fontWeight:600,fontSize:13,color:"var(--tx)"}}>{NAV.find(n=>n.id===tab)?.icon} {NAV.find(n=>n.id===tab)?.label}</div>
+              <div style={{fontSize:10,color:"var(--mt)"}}>Baark Wendé Store</div>
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:30,height:30,borderRadius:"50%",background:"linear-gradient(135deg,var(--g),var(--pk))",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13}}>{user.name[0]}</div>
+          </div>
+        </div>
+
+        <div className="ac">
+          {tab==="dashboard"&&(
+            <>
+              <div className="atl">Dashboard</div><div className="asl">Bienvenue, {user.name} !</div>
+              <div className="sg">
+                {[{icon:"🛒",lbl:"Commandes",val:orders.length},{icon:"📦",lbl:"Produits",val:products.length},{icon:"✅",lbl:"Livrées",val:orders.filter(o=>o.status==="Livré").length},{icon:"⏳",lbl:"En attente",val:orders.filter(o=>o.status==="En attente").length}].map((s,i)=>(
+                  <div key={i} className="sc"><div className="si2">{s.icon}</div><div className="slbl">{s.lbl}</div><div className="sv">{s.val}</div></div>
+                ))}
+              </div>
+              <div className="tw">
+                <div className="tb2"><span style={{fontWeight:600,color:"var(--tx)"}}>📋 Dernières commandes</span></div>
+                <table><thead><tr><th>ID</th><th>Client</th><th>Produit</th><th>Montant</th><th>Statut</th></tr></thead>
+                  <tbody>{orders.slice(0,5).map(o=>(
+                    <tr key={o.id}>
+                      <td style={{fontFamily:"monospace",fontSize:10,color:"var(--g)"}}>{o.id}</td>
+                      <td style={{fontWeight:600,color:"var(--tx)"}}>{o.client}</td>
+                      <td style={{color:"var(--mt)",fontSize:11}}>{o.product}</td>
+                      <td style={{fontWeight:700,color:"var(--g)",fontSize:12}}>{fmt(o.amount)}</td>
+                      <td><SBadge status={o.status}/></td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {tab==="products"&&<AProds products={products} setProducts={setProducts} showT={show}/>}
+          {tab==="orders"&&<AOrders orders={orders} setOrders={setOrders} showT={show}/>}
+          {tab==="stock"&&<AStock products={products} setProducts={setProducts} showT={show}/>}
+          {tab==="stats"&&<AStats products={products} orders={orders}/>}
+          {tab==="reviews"&&<AReviews showT={show}/>}
+          {tab==="admins"&&isSuper&&<AAdmins user={user} showT={show}/>}
+          {tab==="settings"&&isSuper&&<ASettings showT={show}/>}
+          {tab==="security"&&isSuper&&<ASecurity/>}
+        </div>
+      </div>
+      <Toast t={t}/>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ROOT APP
 ═══════════════════════════════════════════ */
 export default function App(){
   const[view,setView]=useState("client");
   const[user,setUser]=useState(null);
   const[products,setProducts]=useState(INIT_PRODS);
   const[orders,setOrders]=useState(INIT_ORDERS);
-  const[reviews,setReviews]=useState([]);
-  const[fbReady,setFbReady]=useState(false);
+  const[ready,setReady]=useState(false);
 
   useEffect(()=>{
-    // Écoute en temps réel Firebase
-    const unsubProds = listenProducts(data=>{
-      setProducts(data.length>0 ? data : INIT_PRODS);
-      setFbReady(true);
+    const unP=listenProducts(data=>{
+      if(data.length>0)setProducts(data);
+      setReady(true);
     });
-    const unsubOrders = listenOrders(data=>{
-      setOrders(data.length>0 ? data : INIT_ORDERS);
+    const unO=listenOrders(data=>{
+      if(data.length>0)setOrders(data);
     });
-    const unsubRevs = listenReviews(data=>{
-      setReviews(data);
-    });
-    return()=>{ unsubProds(); unsubOrders(); unsubRevs(); };
+    return()=>{unP();unO();};
   },[]);
+
+  if(!ready)return(
+    <>
+      <StyleTag/>
+      <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#fff",gap:16}}>
+        <div style={{width:44,height:44,border:"3px solid #EDE9FE",borderTop:"3px solid #7C3AED",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
+        <div style={{color:"#6B7280",fontSize:13}}>Chargement de la boutique...</div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </>
+  );
 
   return(
     <>
       <StyleTag/>
-      {!fbReady && (
-        <div style={{position:"fixed",inset:0,background:"var(--bk)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,flexDirection:"column",gap:16}}>
-          <div style={{width:48,height:48,border:"3px solid var(--br)",borderTop:"3px solid var(--g)",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
-          <div style={{color:"var(--mt)",fontSize:13}}>Connexion à la base de données...</div>
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        </div>
-      )}
       {view==="client"&&<ClientApp products={products} orders={orders} setOrders={setOrders} onAdmin={()=>setView("login")}/>}
-      {view==="login" &&<Login onLogin={u=>{setUser(u);setView("admin");}}/>}
-      {view==="admin" &&user&&<AdminApp user={user} onLogout={()=>{setUser(null);setView("client");}} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} reviews={reviews} setReviews={setReviews}/>}
+      {view==="login"&&<Login onLogin={u=>{setUser(u);setView("admin");}}/>}
+      {view==="admin"&&user&&<AdminApp user={user} onLogout={()=>{setUser(null);setView("client");}} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders}/>}
     </>
   );
 }

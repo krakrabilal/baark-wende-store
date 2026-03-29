@@ -10,12 +10,12 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // 🔴 REMPLACEZ CES VALEURS PAR LES VÔTRES (voir guide ci-dessous)
 const firebaseConfig = {
-  apiKey:            "VOTRE_API_KEY",
-  authDomain:        "VOTRE_PROJECT.firebaseapp.com",
-  projectId:         "VOTRE_PROJECT_ID",
-  storageBucket:     "VOTRE_PROJECT.appspot.com",
-  messagingSenderId: "VOTRE_SENDER_ID",
-  appId:             "VOTRE_APP_ID"
+  apiKey:            "AIzaSyBvSbp2STk05kmh6EaFQhUhdtxeQ9DYeas",
+  authDomain:        "baark-wende-store.firebaseapp.com",
+  projectId:         "baark-wende-store",
+  storageBucket:     "baark-wende-store.firebasestorage.app",
+  messagingSenderId: "136480310863",
+  appId:             "1:136480310863:web:193a94fa26431526a04c3e"
 };
 
 // Initialisation
