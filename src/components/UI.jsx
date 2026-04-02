@@ -21,17 +21,33 @@ export function StatusBadge({ status }) {
 export function StarPicker({ value, onChange }) {
   const [hover, setHover] = useState(0);
   return (
-    <div className="star-picker">
+    <div className="star-picker" style={{ padding:"6px 0" }}>
       {[1, 2, 3, 4, 5].map(i => (
         <span
           key={i}
           className="star-item"
           onMouseEnter={() => setHover(i)}
           onMouseLeave={() => setHover(0)}
+          onTouchStart={(e) => { e.preventDefault(); setHover(i); }}
+          onTouchEnd={(e)   => { e.preventDefault(); onChange(i); setHover(0); }}
           onClick={() => onChange(i)}
-          style={{ color: (hover || value) >= i ? "#F59E0B" : "#D1D5DB" }}
+          style={{
+            color: (hover || value) >= i ? "#D4AF37" : "#3D3D3D",
+            fontSize: 32,
+            cursor: "pointer",
+            transition: ".15s",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            display: "inline-block",
+            padding: "0 3px",
+          }}
         >★</span>
       ))}
+      {value > 0 && (
+        <div style={{ fontSize:11, color:"var(--or)", marginTop:6, fontFamily:"'Montserrat',sans-serif", letterSpacing:1 }}>
+          {["","Tres mauvais","Mauvais","Moyen","Bien","Excellent !"][value]}
+        </div>
+      )}
     </div>
   );
 }

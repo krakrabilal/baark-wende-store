@@ -377,48 +377,103 @@ function AStats({ products, orders }) {
 }
 
 // ─── REVIEWS ─────────────────────────────────────────────────────
-function AReviews({ reviews, setReviews, showT }) {
+function AReviews({ reviews, setReviews, showT, fb }) {
   const [filter, setFilter] = useState("all");
-  const pending = reviews.filter(r=>!r.approved).length;
-  const fl = reviews.filter(r => filter==="all" || (filter==="pending"&&!r.approved) || (filter==="approved"&&r.approved));
+  const pending = reviews.filter(r => !r.approved).length;
+  const fl = reviews.filter(r =>
+    filter === "all" ||
+    (filter === "pending"  && !r.approved) ||
+    (filter === "approved" &&  r.approved)
+  );
+
+  const approve = (r) => {
+    setReviews(prev => prev.map(x => x.id === r.id ? { ...x, approved: true } : x));
+    if (fb && r.fireId) fb.updateReview(r.fireId, { approved: true });
+    showT("Avis approuve et publie ✅");
+  };
+
+  const depublish = (r) => {
+    setReviews(prev => prev.map(x => x.id === r.id ? { ...x, approved: false } : x));
+    if (fb && r.fireId) fb.updateReview(r.fireId, { approved: false });
+    showT("Avis depublie");
+  };
+
+  const remove = (r) => {
+    setReviews(prev => prev.filter(x => x.id !== r.id));
+    if (fb && r.fireId) fb.deleteReview(r.fireId);
+    showT("Avis supprime");
+  };
+
+  const C = {
+    card:    { background:"var(--noir-4)", border:"1px solid var(--gris-2)", borderRadius:12, padding:16, position:"relative" },
+    pending: { background:"rgba(212,175,55,.06)", border:"1px solid var(--or-bd)", borderRadius:12, padding:16, position:"relative" },
+    badge:   { position:"absolute", top:12, right:12, background:"var(--or-gl)", border:"1px solid var(--or-bd)", borderRadius:100, padding:"3px 10px", fontSize:9, color:"var(--or)", fontWeight:700, letterSpacing:1 },
+    name:    { fontWeight:700, fontSize:13, color:"var(--blanc)", fontFamily:"'Playfair Display',serif" },
+    date:    { fontSize:10, color:"var(--gris-3)", letterSpacing:.5 },
+    prod:    { fontSize:9, color:"var(--or)", marginTop:2, letterSpacing:.5 },
+    txt:     { fontSize:12, color:"var(--blanc-3)", lineHeight:1.75, marginBottom:12, fontStyle:"italic" },
+  };
 
   return (
     <>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
-        <div><div className="admin-title">Avis clients</div><div className="admin-sub">{reviews.length} avis — {pending} en attente</div></div>
-      </div>
-      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
-        {[["all","Tous",reviews.length],["pending","En attente",pending],["approved","Approuves",reviews.filter(r=>r.approved).length]].map(([id,lbl,nb])=>(
-          <button key={id} onClick={()=>setFilter(id)} style={{padding:"6px 13px",borderRadius:100,border:"1px solid "+(filter===id?"var(--g)":"var(--br)"),background:filter===id?"var(--g)":"#fff",color:filter===id?"#fff":"var(--mt)",fontSize:11,cursor:"pointer",fontWeight:filter===id?700:400}}>
+      <div className="admin-title">Avis clients</div>
+      <div className="admin-sub">{reviews.length} avis — {pending} en attente de validation</div>
+
+      {/* Filtres */}
+      <div style={{ display:"flex", gap:7, marginBottom:16, flexWrap:"wrap" }}>
+        {[["all","Tous",reviews.length],["pending","En attente",pending],["approved","Approuves",reviews.filter(r=>r.approved).length]].map(([id,lbl,nb]) => (
+          <button key={id} onClick={() => setFilter(id)} style={{
+            padding:"7px 14px", borderRadius:100, cursor:"pointer",
+            border:"1px solid " + (filter===id ? "var(--or)" : "var(--gris-2)"),
+            background: filter===id ? "var(--or-gl)" : "transparent",
+            color: filter===id ? "var(--or)" : "var(--gris-3)",
+            fontSize:11, fontFamily:"'Montserrat',sans-serif",
+            fontWeight: filter===id ? 700 : 400, letterSpacing:"0.5px",
+          }}>
             {lbl} ({nb})
           </button>
         ))}
       </div>
+
+      {/* Alerte en attente */}
       {pending > 0 && filter !== "approved" && (
-        <div style={{background:"#FEF9C3",border:"1px solid #FDE047",borderRadius:9,padding:"10px 14px",marginBottom:14,fontSize:12,color:"#854D0E"}}>
-          ⚠️ {pending} avis en attente de validation.
+        <div style={{ background:"rgba(212,175,55,.08)", border:"1px solid var(--or-bd)", borderRadius:9, padding:"11px 14px", marginBottom:14, fontSize:12, color:"var(--or)", display:"flex", alignItems:"center", gap:8 }}>
+          ⚠️ <strong>{pending} avis</strong> en attente — approuvez-les pour les publier sur le site.
         </div>
       )}
+
+      {/* Liste */}
       {fl.length === 0
-        ? <div style={{textAlign:"center",padding:"28px 0",color:"var(--mt)",fontSize:13}}>Aucun avis.</div>
-        : <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {fl.map(r=>(
-            <div key={r.id} style={{background:r.approved?"#fff":"#FFFBEB",border:"1px solid "+(r.approved?"#E5E7EB":"#FDE047"),borderRadius:12,padding:16,position:"relative"}}>
-              {!r.approved && <div style={{position:"absolute",top:12,right:12,background:"#FEF9C3",border:"1px solid #FDE047",borderRadius:100,padding:"2px 9px",fontSize:9,color:"#92400E",fontWeight:700}}>EN ATTENTE</div>}
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,var(--g),var(--pk))",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:14,flexShrink:0}}>{r.av||r.name?.[0]||"?"}</div>
-                <div>
-                  <div style={{fontWeight:600,fontSize:13,color:"var(--tx)"}}>{r.name}</div>
-                  <div style={{fontSize:10,color:"var(--mt)"}}>{r.date}</div>
-                  {r.prodName && <div style={{fontSize:9,color:"var(--g)",marginTop:1}}>📦 {r.prodName}</div>}
+        ? <div style={{ textAlign:"center", padding:"32px 0", color:"var(--gris-3)", fontSize:13 }}>Aucun avis dans cette categorie.</div>
+        : <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {fl.map(r => (
+            <div key={r.id} style={r.approved ? C.card : C.pending}>
+              {!r.approved && <div style={C.badge}>EN ATTENTE</div>}
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <div style={{ width:40, height:40, borderRadius:"50%", background:"linear-gradient(135deg,var(--or-fonce),var(--or))", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--noir)", fontWeight:700, fontSize:15, flexShrink:0 }}>
+                  {r.av || r.name?.[0] || "?"}
                 </div>
-                <div style={{marginLeft:"auto",color:"#F59E0B",fontSize:14}}>{"★".repeat(r.r)+"☆".repeat(5-r.r)}</div>
+                <div style={{ flex:1 }}>
+                  <div style={C.name}>{r.name}</div>
+                  <div style={C.date}>{r.date}</div>
+                  {r.prodName && <div style={C.prod}>📦 {r.prodName}</div>}
+                </div>
+                <div style={{ color:"var(--or)", fontSize:16, letterSpacing:1 }}>
+                  {"★".repeat(r.r)}
+                  <span style={{ color:"var(--gris-2)" }}>{"★".repeat(5 - r.r)}</span>
+                </div>
               </div>
-              <p style={{fontSize:12,color:"var(--mt)",lineHeight:1.7,marginBottom:10}}>{r.txt}</p>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {!r.approved && <button className="ab ab-ok" onClick={()=>{setReviews(prev=>prev.map(x=>x.id===r.id?{...x,approved:true}:x));showT("Approuve");}}>✅ Approuver</button>}
-                {r.approved  && <button className="ab" style={{background:"rgba(107,114,128,.1)",color:"var(--mt)"}} onClick={()=>setReviews(prev=>prev.map(x=>x.id===r.id?{...x,approved:false}:x))}>🔒 Depublier</button>}
-                <button className="ab ab-dl" onClick={()=>{setReviews(prev=>prev.filter(x=>x.id!==r.id));showT("Supprime");}}>🗑 Supprimer</button>
+              <p style={C.txt}>"{r.txt}"</p>
+              <div style={{ display:"flex", gap:7, flexWrap:"wrap" }}>
+                {!r.approved && (
+                  <button className="ab ab-ok" onClick={() => approve(r)}>✅ Approuver et publier</button>
+                )}
+                {r.approved && (
+                  <button className="ab" style={{ background:"rgba(212,175,55,.1)", color:"var(--or)", border:"1px solid var(--or-bd)" }} onClick={() => depublish(r)}>
+                    🔒 Depublier
+                  </button>
+                )}
+                <button className="ab ab-dl" onClick={() => remove(r)}>🗑 Supprimer</button>
               </div>
             </div>
           ))}
@@ -566,7 +621,7 @@ function ASecurity() {
 }
 
 // ─── ADMIN DASHBOARD (MAIN) ───────────────────────────────────────
-export default function AdminDashboard({ user, onLogout, products, setProducts, orders, setOrders, reviews, setReviews }) {
+export default function AdminDashboard({ user, onLogout, products, setProducts, orders, setOrders, reviews, setReviews, fb }) {
   const [tab, setTab]   = useState("dashboard");
   const [mobSB, setMSB] = useState(false);
   const [showN, setShowN] = useState(false);
@@ -702,7 +757,7 @@ export default function AdminDashboard({ user, onLogout, products, setProducts, 
           {tab === "inventory" && <AInventory products={products} />}
           {tab === "ventes"    && <AVentes    orders={orders} />}
           {tab === "stats"     && <AStats     products={products} orders={orders} />}
-          {tab === "reviews"   && <AReviews   reviews={reviews}   setReviews={setReviews}   showT={showT} />}
+          {tab === "reviews"   && <AReviews   reviews={reviews}   setReviews={setReviews}   showT={showT} fb={fb} />}
           {tab === "admins"    && isSuper && <AAdmins   user={user} showT={showT} />}
           {tab === "settings"  && isSuper && <ASettings showT={showT} />}
           {tab === "security"  && isSuper && <ASecurity />}

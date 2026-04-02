@@ -42,7 +42,7 @@ function Navbar({ page, setPage, cartCount, onCartOpen, onAdmin }) {
 }
 
 // ─── CART PANEL ──────────────────────────────────────────────────
-function CartPanel({ open, onClose, cart, setOrders, showT }) {
+function CartPanel({ open, onClose, cart, setOrders, showT, fb }) {
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState("");
   const [lieu, setLieu] = useState("");
@@ -67,6 +67,7 @@ function CartPanel({ open, onClose, cart, setOrders, showT }) {
       amount: total, status: "En attente", date: today(), lieu,
     };
     setOrders(prev => [order, ...prev]);
+    if (fb && fb.addOrder) fb.addOrder(order).catch(() => {});
     cart.clear();
     setDone(true);
   };
@@ -167,7 +168,7 @@ function CartPanel({ open, onClose, cart, setOrders, showT }) {
 }
 
 // ─── PRODUCT MODAL ────────────────────────────────────────────────
-function ProdModal({ prod, onClose, onAddCart, reviews, setReviews, showT }) {
+function ProdModal({ prod, onClose, onAddCart, reviews, setReviews, showT, fb }) {
   const [tab, setTab] = useState("detail");
   const [qty, setQty] = useState(1);
   const [done, setDone] = useState(false);
@@ -203,6 +204,8 @@ function ProdModal({ prod, onClose, onAddCart, reviews, setReviews, showT }) {
       txt: rvTxt.trim(), approved: false,
     };
     setReviews(prev => [...prev, newRev]);
+    // Sauvegarder dans Firebase si disponible
+    if (fb && fb.addReview) fb.addReview(newRev).catch(() => {});
     setRvSent(true);
     showT("Avis envoye ! En attente de validation");
   };
@@ -585,54 +588,103 @@ function PageContact() {
 }
 
 function PageLivraison() {
-  const sections = [
-    { icon: "📍", t: "Zones",        items: ["Abidjan : 24h a 48h", "Interieur CI : 2 a 5 jours ouvres", "Express Abidjan : jour meme sur demande"] },
-    { icon: "💰", t: "Frais",        items: ["Abidjan : 1 000 a 2 500 FCFA", "Interieur CI : 3 000 a 8 000 FCFA", "Gratuit des 150 000 FCFA d'achat"] },
-    { icon: "💳", t: "Paiements",    items: ["MTN Mobile Money", "Wave", "Orange Money", "Paiement a la livraison (Abidjan)"] },
-    { icon: "🔄", t: "Retours",      items: ["Retour sous 48h si produit defectueux", "Contactez-nous sur WhatsApp avec photos", "Validation requise avant renvoi"] },
-  ];
+  const T  = { fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:700, color:"var(--blanc)", marginBottom:10, display:"flex", alignItems:"center", gap:8 };
+  const LI = { fontSize:13, color:"var(--gris-3)", lineHeight:1.8, fontFamily:"'Montserrat',sans-serif" };
   return (
     <PageBase title="Politique de Livraison">
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {sections.map((s, i) => (
-          <div key={i} className="content-card">
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 20 }}>{s.icon}</span>
-              <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, fontWeight: 700, color: "var(--tx)" }}>{s.t}</div>
-            </div>
-            <ul style={{ paddingLeft: 16, display: "flex", flexDirection: "column", gap: 4 }}>
-              {s.items.map((item, j) => <li key={j} style={{ fontSize: 12, color: "var(--mt)", lineHeight: 1.6 }}>{item}</li>)}
-            </ul>
+      <div style={{ color:"var(--or)", fontStyle:"italic", fontSize:13, marginBottom:20, fontFamily:"'Montserrat',sans-serif" }}>
+        Chez Baark Wende Store, nous mettons tout en oeuvre pour vous garantir une livraison rapide, fiable et securisee.
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        {/* Zones */}
+        <div className="content-card">
+          <div style={T}><span>📍</span>Zones et Tarifs</div>
+          <ul style={{ paddingLeft:16, display:"flex", flexDirection:"column", gap:6 }}>
+            <li style={LI}><strong style={{color:"var(--or)"}}>Abidjan</strong> : 2 000 FCFA</li>
+            <li style={LI}><strong style={{color:"var(--or)"}}>Anyama, Songon, Bingerville</strong> : 3 000 FCFA</li>
+            <li style={LI}><strong style={{color:"var(--or)"}}>Expedition (autres zones)</strong> : 2 000 FCFA</li>
+          </ul>
+        </div>
+        {/* Delais */}
+        <div className="content-card">
+          <div style={T}><span>⏱️</span>Delais de Livraison</div>
+          <ul style={{ paddingLeft:16, display:"flex", flexDirection:"column", gap:6 }}>
+            <li style={LI}>Toutes les commandes livrees en <strong style={{color:"var(--or)"}}>moins de 24 heures</strong> apres confirmation.</li>
+            <li style={LI}>Livraisons effectuees tous les jours, selon la disponibilite de nos agents.</li>
+          </ul>
+        </div>
+        {/* Traitement */}
+        <div className="content-card">
+          <div style={T}><span>📦</span>Traitement des Commandes</div>
+          <ul style={{ paddingLeft:16, display:"flex", flexDirection:"column", gap:6 }}>
+            <li style={LI}>Les commandes sont confirmees apres validation par notre equipe.</li>
+            <li style={LI}>Une fois validee, votre commande est immediatement preparee et confiee a notre service de livraison.</li>
+          </ul>
+        </div>
+        {/* Paiement */}
+        <div className="content-card">
+          <div style={T}><span>💳</span>Mode de Paiement</div>
+          <ul style={{ paddingLeft:16, display:"flex", flexDirection:"column", gap:6 }}>
+            <li style={LI}>Paiement a la livraison disponible (selon la zone).</li>
+            <li style={LI}>Autres moyens de paiement acceptes selon accord avec le client.</li>
+          </ul>
+        </div>
+        {/* Assistance */}
+        <div className="content-card">
+          <div style={T}><span>📞</span>Assistance</div>
+          <p style={LI}>Pour toute question concernant votre livraison :</p>
+          <div style={{ marginTop:8, padding:"10px 14px", background:"var(--or-gl)", border:"1px solid var(--or-bd)", borderRadius:8, fontSize:13, color:"var(--or)", fontFamily:"'Montserrat',sans-serif", fontWeight:600 }}>
+            📱 Telephone / WhatsApp : 0170260670
           </div>
-        ))}
+        </div>
+        {/* Important */}
+        <div style={{ background:"rgba(212,175,55,.06)", border:"1px solid var(--or-bd)", borderRadius:12, padding:16 }}>
+          <div style={T}><span>⚠️</span>Informations Importantes</div>
+          <ul style={{ paddingLeft:16, display:"flex", flexDirection:"column", gap:6 }}>
+            <li style={LI}>Assurez-vous que vos coordonnees sont correctes pour eviter tout retard.</li>
+            <li style={LI}>En cas d'absence, une nouvelle tentative pourra etre programmee.</li>
+          </ul>
+          <div style={{ marginTop:12, fontSize:12, color:"var(--or)", fontStyle:"italic", fontFamily:"'Montserrat',sans-serif" }}>
+            💡 Baark Wende Store s'engage a vous offrir un service rapide, fiable et de qualite.
+          </div>
+        </div>
       </div>
     </PageBase>
   );
 }
 
 function PageConditions() {
+  const T  = { fontFamily:"'Playfair Display',serif", fontSize:14, fontWeight:700, color:"var(--or)", marginBottom:8 };
+  const P  = { fontSize:12, color:"var(--gris-3)", lineHeight:1.85, fontFamily:"'Montserrat',sans-serif" };
   const articles = [
-    { t: "1. Presentation", txt: "Baark Wende Store — Abidjan, CI. Email : " + BOUTIQUE.email + " — Tel : " + BOUTIQUE.tel2 },
-    { t: "2. Commandes", txt: "Toute commande constitue un engagement d'achat. Annulation possible en cas de rupture de stock." },
-    { t: "3. Prix", txt: "Prix en FCFA, susceptibles de changer. Le prix applicable est celui affiche au moment de la commande." },
-    { t: "4. Paiement", txt: "MTN Mobile Money, Wave, Orange Money, ou paiement a la livraison (Abidjan uniquement)." },
-    { t: "5. Livraison", txt: "Delais indicatifs. Non responsable des retards dus a des circonstances exceptionnelles." },
-    { t: "6. Retours", txt: "Produits defectueux retournables sous 48h. Contactez-nous sur WhatsApp avec photos." },
-    { t: "7. Donnees", txt: "Vos donnees servent uniquement au traitement de votre commande. Non partagees avec des tiers." },
-    { t: "8. Litiges", txt: "Contact amiable d'abord : " + BOUTIQUE.email + ". Reponse sous 24h garantie." },
+    { icon:"🛍️", t:"1. Objet", txt:"Les presentes conditions definissent les modalites de vente des produits proposes par Baark Wende Store, ainsi que les droits et obligations des parties." },
+    { icon:"👤", t:"2. Acceptation", txt:"Toute commande passee sur le site implique l'acceptation pleine et entiere des presentes Conditions Generales de Vente." },
+    { icon:"📦", t:"3. Produits", txt:"Les produits sont decrits avec la plus grande precision possible. De legeres differences (couleur, forme) peuvent exister." },
+    { icon:"💰", t:"4. Prix", txt:"Les prix sont en FCFA. Les frais de livraison sont ajoutes selon la zone. Baark Wende Store se reserve le droit de modifier ses prix a tout moment." },
+    { icon:"🧾", t:"5. Commande", txt:"Toute commande est confirmee apres validation. Baark Wende Store peut annuler en cas de probleme (indisponibilite, erreur, etc.)." },
+    { icon:"🚚", t:"6. Livraison", txt:"Livraisons en moins de 24h apres confirmation. Abidjan : 2 000 FCFA — Anyama/Songon/Bingerville : 3 000 FCFA — Expedition : 2 000 FCFA. Le client doit etre disponible." },
+    { icon:"💳", t:"7. Paiement", txt:"Paiement a la livraison disponible. D'autres moyens peuvent etre proposes selon accord." },
+    { icon:"🔁", t:"8. Retours et echanges", txt:"Retours acceptes uniquement si produit defectueux ou non conforme. Reclamation sous 24h apres reception. Produit retourne dans son etat d'origine." },
+    { icon:"⚠️", t:"9. Responsabilite", txt:"Baark Wende Store ne peut etre tenu responsable des dommages dus a une mauvaise utilisation ou a un cas de force majeure." },
+    { icon:"🔐", t:"10. Donnees personnelles", txt:"Les informations collectees servent uniquement au traitement des commandes. Elles ne sont ni vendues ni partagees a des tiers." },
+    { icon:"📞", t:"11. Service client", txt:"Pour toute information ou reclamation : 📱 Telephone / WhatsApp : 0170260670" },
+    { icon:"📌", t:"12. Modification", txt:"Baark Wende Store se reserve le droit de modifier les presentes conditions a tout moment." },
   ];
   return (
     <PageBase title="Conditions Generales de Vente">
-      <div style={{ background: "#FFFBEB", border: "1px solid #FDE047", borderRadius: 9, padding: 12, fontSize: 12, color: "#92400E", marginBottom: 14 }}>
-        Mise a jour : Mars 2025 — En commandant, vous acceptez ces conditions.
+      <div style={{ background:"rgba(212,175,55,.06)", border:"1px solid var(--or-bd)", borderRadius:9, padding:"11px 14px", fontSize:12, color:"var(--or)", marginBottom:18, fontFamily:"'Montserrat',sans-serif" }}>
+        Mise a jour : 2025 — En passant commande, vous reconnaissez avoir lu et accepte ces conditions.
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
         {articles.map((a, i) => (
           <div key={i} className="content-card">
-            <div style={{ fontWeight: 700, fontSize: 12, color: "var(--g)", marginBottom: 5 }}>{a.t}</div>
-            <p style={{ fontSize: 12, color: "var(--mt)", lineHeight: 1.8 }}>{a.txt}</p>
+            <div style={T}>{a.icon} {a.t}</div>
+            <p style={P}>{a.txt}</p>
           </div>
         ))}
+      </div>
+      <div style={{ marginTop:16, padding:"14px 16px", background:"rgba(212,175,55,.08)", border:"1px solid var(--or-bd)", borderRadius:12, fontSize:12, color:"var(--or)", fontStyle:"italic", textAlign:"center", fontFamily:"'Montserrat',sans-serif" }}>
+        💡 En passant commande, le client reconnait avoir pris connaissance et accepte les presentes CGV.
       </div>
     </PageBase>
   );
@@ -748,7 +800,7 @@ function MobileNav({ page, setPage, cartCount, onCartOpen }) {
 }
 
 // ─── CLIENT STORE (MAIN) ──────────────────────────────────────────
-export default function ClientStore({ products, orders, setOrders, reviews, setReviews, onAdmin }) {
+export default function ClientStore({ products, orders, setOrders, reviews, setReviews, onAdmin, fb }) {
   const [page, setPageState] = useState("home");
   const [sel, setSel] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -777,9 +829,9 @@ export default function ClientStore({ products, orders, setOrders, reviews, setR
       {page === "livraison"  && <PageLivraison />}
       {page === "conditions" && <PageConditions />}
 
-      <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} cart={cart} setOrders={setOrders} showT={showT} />
+      <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} cart={cart} setOrders={setOrders} showT={showT} fb={fb} />
 
-      {sel && <ProdModal prod={sel} onClose={() => setSel(null)} onAddCart={cart.add} reviews={reviews} setReviews={setReviews} showT={showT} />}
+      {sel && <ProdModal prod={sel} onClose={() => setSel(null)} onAddCart={cart.add} reviews={reviews} setReviews={setReviews} showT={showT} fb={fb} />}
 
       <button className="wa-float" title="WhatsApp" onClick={() => window.open("https://wa.me/" + BOUTIQUE.wa, "_blank")}>
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
