@@ -1,94 +1,45 @@
-// ═══════════════════════════════════════════════
-//  FIREBASE CONFIG — Baark Wendé Store
-//  Remplacez les valeurs ci-dessous par celles
-//  de VOTRE projet Firebase
-// ═══════════════════════════════════════════════
-
+// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  getFirestore, collection, doc,
+  onSnapshot, addDoc, updateDoc, deleteDoc,
+  query, orderBy, serverTimestamp,
+} from "firebase/firestore";
 
-// 🔴 REMPLACEZ CES VALEURS PAR LES VÔTRES (voir guide ci-dessous)
 const firebaseConfig = {
   apiKey:            "AIzaSyBvSbp2STk05kmh6EaFQhUhdtxeQ9DYeas",
   authDomain:        "baark-wende-store.firebaseapp.com",
   projectId:         "baark-wende-store",
   storageBucket:     "baark-wende-store.firebasestorage.app",
   messagingSenderId: "136480310863",
-  appId:             "1:136480310863:web:193a94fa26431526a04c3e"
+  appId:             "1:136480310863:web:193a94fa26431526a04c3e",
 };
 
-// Initialisation
-const app     = initializeApp(firebaseConfig);
-const db      = getFirestore(app);
-const storage = getStorage(app);
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
-// ── PRODUITS ──────────────────────────────────
-export async function getProducts() {
-  const snap = await getDocs(query(collection(db,"products"), orderBy("createdAt","desc")));
-  return snap.docs.map(d => ({ ...d.data(), fireId: d.id }));
+// PRODUCTS
+export function listenProducts(cb) {
+  const q = query(collection(db,"products"), orderBy("createdAt","desc"));
+  return onSnapshot(q, snap => cb(snap.docs.map(d=>({...d.data(),fireId:d.id}))), ()=>cb([]));
 }
+export const addProduct    = p  => addDoc(collection(db,"products"), {...p, createdAt:serverTimestamp()});
+export const updateProduct = (id,d) => updateDoc(doc(db,"products",id), {...d, updatedAt:serverTimestamp()});
+export const deleteProduct = id => deleteDoc(doc(db,"products",id));
 
-export function listenProducts(callback) {
-  return onSnapshot(
-    query(collection(db,"products"), orderBy("createdAt","desc")),
-    snap => callback(snap.docs.map(d => ({ ...d.data(), fireId: d.id })))
-  );
+// ORDERS
+export function listenOrders(cb) {
+  const q = query(collection(db,"orders"), orderBy("createdAt","desc"));
+  return onSnapshot(q, snap => cb(snap.docs.map(d=>({...d.data(),fireId:d.id}))), ()=>cb([]));
 }
+export const addOrder          = o       => addDoc(collection(db,"orders"), {...o, createdAt:serverTimestamp()});
+export const updateOrderStatus = (id,st) => updateDoc(doc(db,"orders",id), {status:st, updatedAt:serverTimestamp()});
 
-export async function addProduct(product) {
-  const doc_ = await addDoc(collection(db,"products"), {
-    ...product,
-    createdAt: new Date().toISOString()
-  });
-  return doc_.id;
+// REVIEWS
+export function listenReviews(cb) {
+  const q = query(collection(db,"reviews"), orderBy("createdAt","desc"));
+  return onSnapshot(q, snap => cb(snap.docs.map(d=>({...d.data(),fireId:d.id}))), ()=>cb([]));
 }
-
-export async function updateProduct(fireId, data) {
-  await updateDoc(doc(db,"products", fireId), data);
-}
-
-export async function deleteProduct(fireId) {
-  await deleteDoc(doc(db,"products", fireId));
-}
-
-// ── COMMANDES ─────────────────────────────────
-export function listenOrders(callback) {
-  return onSnapshot(
-    query(collection(db,"orders"), orderBy("createdAt","desc")),
-    snap => callback(snap.docs.map(d => ({ ...d.data(), fireId: d.id })))
-  );
-}
-
-export async function addOrder(order) {
-  await addDoc(collection(db,"orders"), {
-    ...order,
-    createdAt: new Date().toISOString()
-  });
-}
-
-export async function updateOrderStatus(fireId, status) {
-  await updateDoc(doc(db,"orders", fireId), { status });
-}
-
-// ── PHOTOS ────────────────────────────────────
-export async function uploadPhoto(file, productName) {
-  const path = `products/${productName}_${Date.now()}_${file.name}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  return await getDownloadURL(storageRef);
-}
-
-// ── AVIS ──────────────────────────────────────
-export function listenReviews(callback) {
-  return onSnapshot(
-    query(collection(db,"reviews"), orderBy("createdAt","desc")),
-    snap => callback(snap.docs.map(d => ({ ...d.data(), fireId: d.id })))
-  );
-}
-
-export async function deleteReview(fireId) {
-  await deleteDoc(doc(db,"reviews", fireId));
-}
-
-export { db, storage };
+export const addReview    = r       => addDoc(collection(db,"reviews"), {...r, createdAt:serverTimestamp()});
+export const updateReview = (id,d)  => updateDoc(doc(db,"reviews",id), {...d, updatedAt:serverTimestamp()});
+export const deleteReview = id      => deleteDoc(doc(db,"reviews",id));
