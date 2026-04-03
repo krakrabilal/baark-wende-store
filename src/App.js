@@ -17,7 +17,23 @@ export default function App() {
   const [products, setProducts] = useState(INIT_PRODS);
   const [orders,   setOrders]   = useState(INIT_ORDERS);
   const [reviews,  setReviews]  = useState(INIT_REVIEWS);
+  const [logo,     setLogo]     = useState(null); // logo personnalise superadmin
   const [ready,    setReady]    = useState(false);
+
+  // Recalcule les stats produit (r, rv) apres chaque changement d'avis
+  const setReviewsAndSync = (updater) => {
+    setReviews(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      // Mettre a jour les stats de chaque produit
+      setProducts(prods => prods.map(p => {
+        const approved = next.filter(r => r.approved && r.prodId === p.id);
+        if (approved.length === 0) return p;
+        const avg = approved.reduce((s, r) => s + r.r, 0) / approved.length;
+        return { ...p, r: Math.round(avg * 10) / 10, rv: approved.length };
+      }));
+      return next;
+    });
+  };
 
   useEffect(() => {
     const unP = listenProducts(data => {
@@ -79,8 +95,10 @@ export default function App() {
           orders={orders}
           setOrders={setOrders}
           reviews={reviews}
-          setReviews={setReviews}
+          setReviews={setReviewsAndSync}
           fb={fbActions}
+          logo={logo}
+          setLogo={setLogo}
         />
       )}
     </>

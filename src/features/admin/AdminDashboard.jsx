@@ -572,13 +572,71 @@ function AAdmins({ user, showT }) {
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────
-function ASettings({ showT }) {
+function ASettings({ showT, logo, setLogo }) {
   const [s, setS] = useState({ nom:BOUTIQUE.name, tel1:BOUTIQUE.tel1, tel2:BOUTIQUE.tel2, email:BOUTIQUE.email, lieu:BOUTIQUE.lieu, wa:BOUTIQUE.wa });
+
+  const handleLogo = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 500000) { showT("Image trop grande (max 500KB)", true); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setLogo(ev.target.result);
+      showT("Logo mis a jour !");
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <>
       <div className="admin-title">Parametres</div>
       <div className="admin-sub">Informations de la boutique</div>
+
+      {/* Logo / Photo de profil */}
+      <div className="table-wrap" style={{padding:18, marginBottom:16}}>
+        <div style={{fontFamily:"'Playfair Display',serif", fontSize:14, fontWeight:700, color:"var(--or)", marginBottom:14, letterSpacing:1}}>
+          LOGO DE LA BOUTIQUE
+        </div>
+        <div style={{display:"flex", alignItems:"center", gap:18, flexWrap:"wrap"}}>
+          <div style={{width:90, height:90, borderRadius:14, border:"2px solid var(--or-bd)", overflow:"hidden", background:"var(--noir-4)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0}}>
+            {logo
+              ? <img src={logo} alt="logo" style={{width:"100%", height:"100%", objectFit:"contain"}} />
+              : <span style={{fontSize:36}}>🏪</span>
+            }
+          </div>
+          <div>
+            <div style={{fontSize:12, color:"var(--gris-3)", marginBottom:10, fontFamily:"'Montserrat',sans-serif"}}>
+              Ce logo s'affiche dans la navbar et sur le site.<br/>
+              Format recommande : PNG carre 200x200px (max 500KB)
+            </div>
+            <label style={{
+              display:"inline-flex", alignItems:"center", gap:8,
+              background:"var(--or-gl)", border:"1px solid var(--or-bd)",
+              color:"var(--or)", borderRadius:8, padding:"9px 16px",
+              fontSize:12, cursor:"pointer", fontFamily:"'Montserrat',sans-serif",
+              fontWeight:600, letterSpacing:1, transition:".2s"
+            }}>
+              📁 Choisir une image
+              <input type="file" accept="image/*" onChange={handleLogo} style={{display:"none"}} />
+            </label>
+            {logo && (
+              <button onClick={()=>{setLogo(null); showT("Logo reinitialise");}} style={{
+                marginLeft:10, background:"rgba(239,68,68,.12)", border:"none",
+                color:"#FCA5A5", borderRadius:8, padding:"9px 14px",
+                fontSize:12, cursor:"pointer", fontFamily:"'Montserrat',sans-serif"
+              }}>
+                🗑 Retirer
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Infos boutique */}
       <div className="table-wrap" style={{padding:16}}>
+        <div style={{fontFamily:"'Playfair Display',serif", fontSize:14, fontWeight:700, color:"var(--or)", marginBottom:14, letterSpacing:1}}>
+          INFORMATIONS
+        </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(200px,100%),1fr))",gap:10}}>
           {[["Nom","nom"],["Tel. 1","tel1"],["Tel. 2","tel2"],["Email","email"],["Lieu","lieu"],["WhatsApp","wa"]].map(([l,k])=>(
             <div key={k} className="fg"><label className="fl">{l}</label><input className="fi" value={s[k]} onChange={e=>setS({...s,[k]:e.target.value})}/></div>
@@ -621,7 +679,7 @@ function ASecurity() {
 }
 
 // ─── ADMIN DASHBOARD (MAIN) ───────────────────────────────────────
-export default function AdminDashboard({ user, onLogout, products, setProducts, orders, setOrders, reviews, setReviews, fb }) {
+export default function AdminDashboard({ user, onLogout, products, setProducts, orders, setOrders, reviews, setReviews, fb, logo, setLogo }) {
   const [tab, setTab]   = useState("dashboard");
   const [mobSB, setMSB] = useState(false);
   const [showN, setShowN] = useState(false);
@@ -759,7 +817,7 @@ export default function AdminDashboard({ user, onLogout, products, setProducts, 
           {tab === "stats"     && <AStats     products={products} orders={orders} />}
           {tab === "reviews"   && <AReviews   reviews={reviews}   setReviews={setReviews}   showT={showT} fb={fb} />}
           {tab === "admins"    && isSuper && <AAdmins   user={user} showT={showT} />}
-          {tab === "settings"  && isSuper && <ASettings showT={showT} />}
+          {tab === "settings"  && isSuper && <ASettings showT={showT} logo={logo} setLogo={setLogo} />}
           {tab === "security"  && isSuper && <ASecurity />}
         </div>
       </div>

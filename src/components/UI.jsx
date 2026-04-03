@@ -240,8 +240,10 @@ export function ProductCard({ p, onView, onAdd }) {
         {/* Étoiles — masquées si 0 avis */}
         {p.rv > 0 && (
           <div className="product-stars">
-            {stars(p.r)}
-            <span style={{ color: "var(--gris-3)", fontSize: 9, marginLeft: 4 }}>({p.rv})</span>
+            {[1,2,3,4,5].map(i=>(
+              <span key={i} style={{ color: i <= Math.round(p.r) ? "#D4AF37" : "#3D3D3D", fontSize:11 }}>★</span>
+            ))}
+            <span style={{ color:"var(--gris-3)", fontSize:9, marginLeft:3, fontFamily:"'Montserrat',sans-serif" }}>({p.rv})</span>
           </div>
         )}
         {/* Prix — devise alignée, pas de barré */}
