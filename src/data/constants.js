@@ -47,7 +47,7 @@ export const BOUTIQUE = {
   email:   "baarkwendestore@baarkwende.com",
   tel1:    "0170260670",
   tel2:    "+225 0787213203",
-  wa:      "2250787213203",
+  wa:      "2250170260610",
   lieu:    "Abidjan, Cote d'Ivoire",
   fb:      "Baark Wende Store",
   horaires:"Lun-Sam 8h-20h / Dim 10h-18h",

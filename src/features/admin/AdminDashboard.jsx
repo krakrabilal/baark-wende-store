@@ -166,7 +166,7 @@ function AProds({ products, setProducts, showT }) {
 }
 
 // ─── ORDERS ──────────────────────────────────────────────────────
-function AOrders({ orders, setOrders, showT }) {
+function AOrders({ orders, setOrders, showT, fb }) {
   const [q, setQ] = useState("");
   const fl = orders.filter(o => o.client.toLowerCase().includes(q.toLowerCase()) || o.product.toLowerCase().includes(q.toLowerCase()));
   return (
@@ -194,7 +194,12 @@ function AOrders({ orders, setOrders, showT }) {
                     className="fi"
                     style={{ padding:"3px 6px", fontSize:10, width:"auto" }}
                     value={o.status}
-                    onChange={e => { const st = e.target.value; setOrders(prev => prev.map(x => x.id === o.id ? { ...x, status: st } : x)); showT("Statut mis a jour"); }}
+                    onChange={e => {
+                      const st = e.target.value;
+                      setOrders(prev => prev.map(x => x.id === o.id ? { ...x, status: st } : x));
+                      if (fb && o.fireId) fb.updateOrderStatus(o.fireId, st).catch(()=>{});
+                      showT("Statut mis a jour — " + st);
+                    }}
                   >
                     {STATUSES.map(s => <option key={s}>{s}</option>)}
                   </select>
@@ -365,12 +370,24 @@ function AStats({ products, orders }) {
       </div>
       <div className="table-wrap" style={{padding:16}}>
         <div style={{fontWeight:700,marginBottom:14,color:"var(--tx)"}}>Ventes par categorie</div>
-        {cats.map(({c,n})=>(
-          <div key={c} style={{marginBottom:11}}>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3,color:"var(--tx)"}}><span>{c}</span><span style={{fontWeight:700,color:"var(--g)"}}>{n}</span></div>
-            <div style={{background:"#E5E7EB",borderRadius:4,height:7}}><div style={{background:"linear-gradient(90deg,var(--g),var(--pk))",width:((n/maxN)*100)+"%",height:"100%",borderRadius:4,transition:".5s"}}/></div>
-          </div>
-        ))}
+        {cats.map(({c,n},i)=>{
+          const colors = ["#D4AF37","#E8CC6A","#A8871E","#C9A227","#F0D060"];
+          const pct = maxN > 0 ? Math.round((n/maxN)*100) : 0;
+          return (
+            <div key={c} style={{marginBottom:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,marginBottom:6}}>
+                <span style={{color:"var(--blanc)",fontFamily:"'Montserrat',sans-serif",fontWeight:500}}>{c}</span>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontWeight:700,color:colors[i%colors.length],fontFamily:"'Playfair Display',serif",fontSize:14}}>{n}</span>
+                  <span style={{fontSize:10,color:"var(--gris-3)",fontFamily:"'Montserrat',sans-serif"}}>{pct}%</span>
+                </div>
+              </div>
+              <div style={{background:"var(--gris-1)",borderRadius:6,height:10,overflow:"hidden"}}>
+                <div style={{background:"linear-gradient(90deg,"+colors[i%colors.length]+"CC,"+colors[i%colors.length]+")",width:pct+"%",height:"100%",borderRadius:6,transition:".6s ease",minWidth:pct>0?"4px":0}}/>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );
@@ -496,12 +513,20 @@ function AAdmins({ user, showT }) {
   const [showPw, setShowPw] = useState({});
 
   const save = () => {
-    if (!na.name.trim()||!na.id.trim()||!na.pw.trim()) { showT("Remplissez tous les champs", true); return; }
-    if (na.pw.length < 6) { showT("Mot de passe trop court (min. 6 car.)", true); return; }
-    if (!edit && adms.find(a=>a.id===na.id)) { showT("Identifiant deja utilise", true); return; }
-    if (edit) { setAdms(p=>p.map(a=>a.id===edit.id?{...a,...na}:a)); showT("Compte modifie"); }
-    else { setAdms(p=>[...p,{...na,st:"actif"}]); showT("Compte cree"); }
-    setForm(false); setEdit(null); setNA({id:"",name:"",pw:"",role:"admin"});
+    if (!na.name.trim())   { showT("Entrez un nom complet", true); return; }
+    if (!na.id.trim())     { showT("Entrez un identifiant", true); return; }
+    if (!na.pw.trim())     { showT("Entrez un mot de passe", true); return; }
+    if (na.pw.length < 6)  { showT("Mot de passe : min. 6 caracteres", true); return; }
+    if (!edit && adms.find(a => a.id === na.id)) { showT("Cet identifiant existe deja", true); return; }
+    if (edit) {
+      setAdms(p => p.map(a => a.id === edit.id ? { ...a, ...na } : a));
+      showT("Compte modifie ✅");
+    } else {
+      const newAdmin = { ...na, st:"actif", created: new Date().toLocaleDateString("fr-FR") };
+      setAdms(p => [...p, newAdmin]);
+      showT("Nouveau compte cree ✅");
+    }
+    setForm(false); setEdit(null); setNA({ id:"", name:"", pw:"", role:"admin" });
   };
 
   return (
@@ -539,7 +564,7 @@ function AAdmins({ user, showT }) {
       )}
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Nom</th><th>ID / MDP</th><th>Role</th><th>Statut</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Nom</th><th>ID / MDP</th><th>Role</th><th>Statut</th><th>Cree le</th><th>Actions</th></tr></thead>
           <tbody>
             {adms.map((a,i)=>(
               <tr key={i}>
@@ -688,17 +713,21 @@ export default function AdminDashboard({ user, onLogout, products, setProducts, 
 
   const prevOrd = useRef(orders.length);
   const prevRev = useRef(reviews.length);
+  const isMount  = useRef(true);
 
   useEffect(() => {
+    if (isMount.current) { isMount.current = false; return; }
     if (orders.length > prevOrd.current) {
-      addNotif("Nouvelle commande de " + (orders[0]?.client || "Client") + " — " + fmt(orders[0]?.amount || 0), "order");
+      const o = orders[0];
+      addNotif("🛒 Nouvelle commande — " + (o?.client || "Client") + " — " + fmt(o?.amount || 0), "order");
     }
     prevOrd.current = orders.length;
   }, [orders.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (reviews.length > prevRev.current) {
-      addNotif("Nouvel avis de " + (reviews[reviews.length-1]?.name || "Client") + " — En attente", "review");
+      const r = reviews[reviews.length-1];
+      addNotif("⭐ Nouvel avis de " + (r?.name || "Client") + " — En attente de validation", "review");
     }
     prevRev.current = reviews.length;
   }, [reviews.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -810,7 +839,7 @@ export default function AdminDashboard({ user, onLogout, products, setProducts, 
             </>
           )}
           {tab === "products"  && <AProds     products={products} setProducts={setProducts} showT={showT} />}
-          {tab === "orders"    && <AOrders    orders={orders}     setOrders={setOrders}     showT={showT} />}
+          {tab === "orders"    && <AOrders    orders={orders}     setOrders={setOrders}     showT={showT} fb={fb} />}
           {tab === "stock"     && <AStock     products={products} setProducts={setProducts} />}
           {tab === "inventory" && <AInventory products={products} />}
           {tab === "ventes"    && <AVentes    orders={orders} />}

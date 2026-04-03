@@ -12,8 +12,14 @@ import {
 } from "./firebase";
 
 export default function App() {
-  const [view,     setView]     = useState("client");
-  const [user,     setUser]     = useState(null);
+  // Persist admin session across refreshes
+  const savedView = localStorage.getItem("bws_view") || "client";
+  const savedUser = (() => { try { return JSON.parse(localStorage.getItem("bws_user")); } catch(e) { return null; } })();
+  const [view, setView_] = useState(savedUser ? savedView : "client");
+  const [user, setUser_] = useState(savedUser);
+
+  const setView = (v) => { setView_(v); localStorage.setItem("bws_view", v); };
+  const setUser = (u) => { setUser_(u); if (u) localStorage.setItem("bws_user", JSON.stringify(u)); else localStorage.removeItem("bws_user"); };
   const [products, setProducts] = useState(INIT_PRODS);
   const [orders,   setOrders]   = useState(INIT_ORDERS);
   const [reviews,  setReviews]  = useState(INIT_REVIEWS);
