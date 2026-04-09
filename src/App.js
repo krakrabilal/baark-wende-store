@@ -43,7 +43,12 @@ export default function App() {
 
   useEffect(() => {
     const unP = listenProducts(data => {
-      if (data.length > 0) setProducts(data);
+      // Firebase est la source de verite
+      // Si Firebase a des donnees, on les utilise
+      // Sinon on garde les donnees initiales (INIT_PRODS)
+      if (data.length > 0) {
+        setProducts(data);
+      }
       setReady(true);
     });
     const unO = listenOrders(data => {

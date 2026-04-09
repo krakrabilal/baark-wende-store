@@ -43,7 +43,7 @@ function PhotoSlot({ src, idx, onRead, onRemove }) {
 }
 
 // ─── PRODUCTS ────────────────────────────────────────────────────
-function AProds({ products, setProducts, showT }) {
+function AProds({ products, setProducts, showT, fb }) {
   const EMPTY = { name:"", cat:"Montres", price:"", oldPrice:"", stock:"", desc:"", badge:"" };
   const [form, setForm]   = useState(false);
   const [edit, setEdit]   = useState(null);
@@ -80,10 +80,22 @@ function AProds({ products, setProducts, showT }) {
     };
     if (edit) {
       setProducts(prev => prev.map(p => p.id === edit.id ? { ...p, ...prod } : p));
-      showT("Produit modifie");
+      // Sync Firebase
+      if (fb && edit.fireId) {
+        fb.updateProduct(edit.fireId, prod).catch(() => {});
+      } else if (fb && fb.addProduct) {
+        // fireId absent → recréer dans Firebase
+        fb.addProduct({ ...prod, id: edit.id }).catch(() => {});
+      }
+      showT("Produit modifie ✅");
     } else {
-      setProducts(prev => [{ ...prod, id: Date.now() }, ...prev]);
-      showT("Produit ajoute");
+      const newId = Date.now();
+      setProducts(prev => [{ ...prod, id: newId }, ...prev]);
+      // Sauvegarder dans Firebase → le listener va le récupérer avec fireId
+      if (fb && fb.addProduct) {
+        fb.addProduct({ ...prod, id: newId }).catch(() => {});
+      }
+      showT("Produit ajoute ✅");
     }
     reset(); setForm(false);
   };
@@ -153,7 +165,13 @@ function AProds({ products, setProducts, showT }) {
                 <td>
                   <div style={{ display:"flex", gap:4 }}>
                     <button className="ab ab-ed" onClick={() => openEdit(p)}>✏️</button>
-                    <button className="ab ab-dl" onClick={() => { if (window.confirm("Supprimer ?")) { setProducts(prev => prev.filter(x => x.id !== p.id)); showT("Supprime"); } }}>🗑</button>
+                    <button className="ab ab-dl" onClick={() => {
+                      if (window.confirm("Supprimer ce produit ?")) {
+                        setProducts(prev => prev.filter(x => x.id !== p.id));
+                        if (fb && p.fireId) fb.deleteProduct(p.fireId).catch(() => {});
+                        showT("Produit supprime ✅");
+                      }
+                    }}>🗑</button>
                   </div>
                 </td>
               </tr>
@@ -215,7 +233,7 @@ function AOrders({ orders, setOrders, showT, fb }) {
 }
 
 // ─── STOCK ───────────────────────────────────────────────────────
-function AStock({ products, setProducts }) {
+function AStock({ products, setProducts, fb }) {
   return (
     <>
       <div className="admin-title">Stock</div>
@@ -231,9 +249,17 @@ function AStock({ products, setProducts }) {
                 <td><span style={{ fontWeight:700, color:p.stock<5?"var(--rd)":p.stock<10?"var(--or)":"var(--gn)" }}>{p.stock}</span></td>
                 <td>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <button className="ab ab-dl" onClick={() => setProducts(prev=>prev.map(x=>x.id===p.id?{...x,stock:Math.max(0,x.stock-1)}:x))}>−</button>
+                    <button className="ab ab-dl" onClick={() => {
+                      const ns = Math.max(0, p.stock-1);
+                      setProducts(prev=>prev.map(x=>x.id===p.id?{...x,stock:ns}:x));
+                      if (fb && p.fireId) fb.updateProduct(p.fireId, {stock:ns}).catch(()=>{});
+                    }}>−</button>
                     <span style={{ fontWeight:700, minWidth:24, textAlign:"center" }}>{p.stock}</span>
-                    <button className="ab ab-ok" onClick={() => setProducts(prev=>prev.map(x=>x.id===p.id?{...x,stock:x.stock+1}:x))}>+</button>
+                    <button className="ab ab-ok" onClick={() => {
+                      const ns = p.stock+1;
+                      setProducts(prev=>prev.map(x=>x.id===p.id?{...x,stock:ns}:x));
+                      if (fb && p.fireId) fb.updateProduct(p.fireId, {stock:ns}).catch(()=>{});
+                    }}>+</button>
                   </div>
                 </td>
               </tr>
@@ -838,9 +864,9 @@ export default function AdminDashboard({ user, onLogout, products, setProducts, 
               </div>
             </>
           )}
-          {tab === "products"  && <AProds     products={products} setProducts={setProducts} showT={showT} />}
+          {tab === "products"  && <AProds     products={products} setProducts={setProducts} showT={showT} fb={fb} />}
           {tab === "orders"    && <AOrders    orders={orders}     setOrders={setOrders}     showT={showT} fb={fb} />}
-          {tab === "stock"     && <AStock     products={products} setProducts={setProducts} />}
+          {tab === "stock"     && <AStock     products={products} setProducts={setProducts} fb={fb} />}
           {tab === "inventory" && <AInventory products={products} />}
           {tab === "ventes"    && <AVentes    orders={orders} />}
           {tab === "stats"     && <AStats     products={products} orders={orders} />}
